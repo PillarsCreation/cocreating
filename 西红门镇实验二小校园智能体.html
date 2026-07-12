@@ -1,0 +1,3084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>西红门镇实验二小校园智能体</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
+<style>
+
+
+/* ==================== 设计令牌 ==================== */
+:root {
+  --app-font: "PingFang SC", "MiSans", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  /* 间距阶梯（4px 网格） */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  /* 字号阶梯 */
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 15px; --fs-xl: 18px; --fs-num: 28px;
+  /* 圆角与阴影层级 */
+  --r-md: 8px; --r-lg: 12px;
+  --shadow-1: 0 1px 2px rgba(13, 42, 82, .04), 0 2px 8px rgba(13, 42, 82, .06);
+  --shadow-2: 0 4px 16px rgba(13, 42, 82, .10);
+  --shadow-3: 0 8px 32px rgba(13, 42, 82, .14);
+  /* 品牌与语义色（浅色 = TDesign 政务蓝体系） */
+  --brand: var(--td-brand-color, #0052d9);
+  --ink: var(--td-text-color-primary, rgba(0,0,0,.9));
+  --ink-2: var(--td-text-color-secondary, rgba(0,0,0,.6));
+  --ink-3: var(--td-text-color-placeholder, rgba(0,0,0,.4));
+  --line: var(--td-component-border, #dcdcdc);
+  --bg-page: #f2f4f8;
+  --bg-card: #ffffff;
+  --chain-bg: #0d2144;
+  --chain-txt: #a9d3ff;
+  /* v5 新增：毛玻璃变量（浅色模式） */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-blur: blur(20px);
+  /* v5 新增：发光色 */
+  --glow-cyan: rgba(40, 209, 232, 0.4);
+  --glow-brand: rgba(0, 82, 217, 0.3);
+}
+
+:root[theme-mode="dark"] {
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, .35);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, .45);
+  --shadow-3: 0 12px 48px rgba(0, 0, 0, .55);
+  --brand: #4d9fff;
+  --line: #22406e;
+  --bg-page: #081226;
+  --bg-card: #0e1c3c;
+  --ink: #dbe7ff; --ink-2: #8fa9d6; --ink-3: #5c7099;
+  --chain-bg: #060e22; --chain-txt: #7fd4ff;
+  /* v5 新增：深色毛玻璃 */
+  --glass-bg: rgba(14, 28, 60, 0.78);
+  --glass-border: rgba(40, 209, 232, 0.12);
+  --glass-blur: blur(20px);
+  /* v5 新增：深色发光色 */
+  --glow-cyan: rgba(40, 209, 232, 0.5);
+  --glow-brand: rgba(77, 159, 255, 0.35);
+}
+
+/* ==================== 全局重置与基础 ==================== */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: var(--app-font); background: var(--bg-page); color: var(--ink); font-size: var(--fs-md); }
+i[class^="ri-"], i[class*=" ri-"] { line-height: 1; vertical-align: -0.12em; }
+.muted { color: var(--ink-2); font-size: var(--fs-xs); }
+.spin { display: inline-block; animation: rot 1s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* ==================== 登录页 ==================== */
+/* v5：新增 60 度交叉网格纹理背景 */
+.login-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  background:
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 40px,
+      rgba(40, 209, 232, 0.03) 40px,
+      rgba(40, 209, 232, 0.03) 41px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 40px,
+      rgba(40, 209, 232, 0.02) 40px,
+      rgba(40, 209, 232, 0.02) 41px
+    ),
+    radial-gradient(1200px 700px at 20% 0%, #14498f 0%, #0d2a52 45%, #081226 100%);
+}
+.login-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; max-width: 980px; width: 100%; align-items: center; }
+@media (max-width: 900px) { .login-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+/* v5：品牌徽章多层光晕 */
+.brand-side { color: #eaf2ff; }
+.brand-badge {
+  width: 64px; height: 64px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a66cc, #0fa8bd);
+  font-size: 34px; color: #fff;
+  margin-bottom: var(--sp-5);
+  /* v5：双层 box-shadow 模拟发光 */
+  box-shadow:
+    0 0 20px rgba(15, 168, 189, 0.35),
+    0 0 60px rgba(15, 168, 189, 0.15),
+    0 10px 30px rgba(15, 168, 189, 0.35);
+}
+.brand-side h1 { font-size: 30px; letter-spacing: 3px; margin: 0 0 var(--sp-2); }
+.brand-side .sub { color: #9db8dd; font-size: var(--fs-md); line-height: 1.9; margin-bottom: var(--sp-6); }
+
+/* v5：feat 条目 hover 微动效 */
+.feat {
+  display: flex; gap: var(--sp-3); align-items: flex-start;
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  transition: transform .2s ease, background .2s ease;
+}
+.feat:hover {
+  transform: translateY(-2px);
+  background: rgba(40, 209, 232, 0.06);
+}
+.feat i { font-size: 18px; color: #28d1e8; margin-top: 2px; }
+.feat b { display: block; font-size: var(--fs-md); }
+.feat span { color: #8aa6cf; font-size: var(--fs-xs); line-height: 1.7; }
+
+/* v5：acct-panel 增强 backdrop-filter + 渐变边框 */
+.acct-panel {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 16px;
+  padding: var(--sp-5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+/* v5：伪元素渐变边框 */
+.acct-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(122, 168, 255, 0.4), rgba(40, 209, 232, 0.2), rgba(122, 168, 255, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.acct-panel .hd { color: #cfe0fa; font-size: var(--fs-sm); margin-bottom: var(--sp-3); display: flex; align-items: center; gap: 6px; }
+.acct {
+  display: flex; align-items: center; gap: var(--sp-3);
+  background: rgba(255,255,255,.05); border: 1px solid rgba(122,168,255,.22);
+  border-radius: var(--r-lg); padding: 13px 16px; color: #fff; cursor: pointer;
+  margin-bottom: var(--sp-2); transition: all .2s ease;
+}
+.acct:hover { background: rgba(77,159,255,.16); border-color: #4d9fff; transform: translateX(4px); }
+.acct .av {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; flex: none;
+}
+.acct .nm { flex: 1; min-width: 0; }
+.acct .nm b { font-size: var(--fs-lg); }
+.acct .nm .meta { font-size: var(--fs-xs); color: #9db8dd; margin-top: 2px; }
+.acct .go { color: #7fb5ff; font-size: 18px; }
+.login-note { color: #6d86ad; font-size: var(--fs-xs); margin-top: var(--sp-3); line-height: 1.8; }
+.login-err { color: #ff8f8a; font-size: var(--fs-sm); min-height: 18px; margin-top: var(--sp-2); }
+
+/* ==================== 应用框架 ==================== */
+/* v5：底部发光线 */
+.app-header {
+  height: 56px;
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: 0 var(--sp-6);
+  background: linear-gradient(90deg, #0d2a52, #123a74);
+  color: #fff;
+  position: sticky; top: 0; z-index: 50;
+  /* v5：底部发光线 */
+  box-shadow: 0 1px 0 0 rgba(40, 209, 232, 0.3), 0 2px 12px rgba(40, 209, 232, 0.1);
+}
+body.dark .app-header {
+  background: linear-gradient(90deg, #060e22, #0a1c40);
+  border-bottom: none;
+  /* v5：深色模式下发光线增强 */
+  box-shadow: 0 1px 0 0 rgba(40, 209, 232, 0.4), 0 2px 20px rgba(40, 209, 232, 0.15);
+}
+.app-header .logo { display: flex; align-items: center; gap: var(--sp-2); font-size: 16px; font-weight: 700; letter-spacing: 1px; }
+.app-header .logo i { font-size: 22px; color: #28d1e8; }
+.app-header .spacer { flex: 1; }
+.app-header .who { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); opacity: .92; }
+
+/* v5：导航栏毛玻璃效果 */
+.app-nav {
+  display: flex; gap: var(--sp-1);
+  padding: 0 var(--sp-5);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  overflow-x: auto;
+  position: sticky; top: 56px; z-index: 49;
+}
+.app-nav button {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  padding: 14px 14px; font-size: var(--fs-md); font-family: var(--app-font);
+  color: var(--ink-2);
+  border-bottom: 2.5px solid transparent; white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease;
+}
+.app-nav button i { font-size: 16px; }
+.app-nav button:hover { color: var(--brand); }
+.app-nav button.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+
+/* v5：main 区域增加 section 级间距节奏 */
+main {
+  max-width: 1200px;
+  margin: var(--sp-5) auto;
+  padding: 0 var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.page-loading, .page-err {
+  display: flex; align-items: center; gap: var(--sp-2);
+  color: var(--ink-2);
+  padding: 48px 0; justify-content: center; font-size: var(--fs-md);
+}
+
+/* ==================== 面板 / KPI ==================== */
+.panel {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--sp-4);
+  overflow: hidden;
+  transition: box-shadow .25s ease;
+}
+.panel:hover { box-shadow: var(--shadow-2); }
+
+/* v5：深色模式面板渐变发光边框（伪元素） */
+body.dark .panel {
+  box-shadow: inset 0 0 30px rgba(40, 209, 232, .03), var(--shadow-1);
+  border-color: rgba(40, 209, 232, 0.15);
+}
+body.dark .panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lg);
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(40, 209, 232, 0.2) 0%,
+    rgba(77, 159, 255, 0.08) 50%,
+    rgba(40, 209, 232, 0.15) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.panel-hd {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.panel-hd i { color: var(--brand); font-size: 17px; }
+/* v5：panel-hd 标题 letter-spacing 微调 */
+.panel-hd h3 { margin: 0; font-size: var(--fs-lg); font-weight: 600; letter-spacing: 0.3px; }
+.panel-hd .panel-desc { color: var(--ink-3); font-size: var(--fs-xs); }
+.panel-hd .extra { margin-left: auto; }
+.panel-bd { padding: var(--sp-4) 18px; }
+
+.grid { display: grid; gap: var(--sp-4); }
+.g2 { grid-template-columns: 1fr 1fr; align-items: start; }
+.span2 { grid-column: 1 / -1; }
+@media (max-width: 900px) { .g2 { grid-template-columns: 1fr; } }
+
+/* KPI 行 */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.kpi {
+  position: relative;
+  display: flex; gap: var(--sp-3); align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  box-shadow: var(--shadow-1);
+  transition: transform .2s ease, box-shadow .2s ease;
+  overflow: hidden;
+}
+/* v5：KPI 卡 hover 微抬升 */
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+.kpi .ic {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 21px; flex: none;
+  background: rgba(0,82,217,.08); color: var(--brand);
+}
+.kpi.warn .ic { background: rgba(227,115,24,.1); color: #e37318; }
+.kpi.bad .ic { background: rgba(213,73,65,.1); color: #d54941; }
+.kpi.good .ic { background: rgba(43,164,113,.1); color: #2ba471; }
+.kpi .num {
+  font-size: var(--fs-num); font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi.warn .num { color: #e37318; }
+.kpi.bad .num { color: #d54941; }
+.kpi.good .num { color: #2ba471; }
+.kpi .lbl { font-size: var(--fs-xs); color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
+
+/* v5：深色模式 KPI 顶部渐变线 */
+body.dark .kpi {
+  border-top: none;
+}
+body.dark .kpi::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #28d1e8, rgba(40, 209, 232, 0.1));
+  border-radius: 2px 2px 0 0;
+}
+body.dark .kpi .num {
+  color: #28d1e8;
+  /* v5：增强 text-shadow 发光 */
+  text-shadow: 0 0 14px rgba(40, 209, 232, .4), 0 0 30px rgba(40, 209, 232, .15);
+}
+body.dark .kpi .ic { background: rgba(40,209,232,.1); color: #28d1e8; }
+
+/* ==================== v5 新增：stat-card 紧凑指标卡 ==================== */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+.stat-card .stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+  line-height: 1.2;
+}
+.stat-card .stat-lbl {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.stat-card .stat-chg {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.stat-card .stat-chg.up { color: #2ba471; }
+.stat-card .stat-chg.down { color: #d54941; }
+
+/* ==================== 表格 ==================== */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: var(--fs-sm);
+}
+/* v5：固定表头 */
+.tbl thead { position: sticky; top: 0; z-index: 2; }
+.tbl th {
+  text-align: left; color: var(--ink-2); font-weight: 500; font-size: var(--fs-xs);
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+  background: rgba(0,82,217,.025);
+}
+body.dark .tbl th {
+  background: rgba(40, 209, 232, 0.06);
+  color: #9fd8ff;
+}
+.tbl td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover td { background: rgba(0,82,217,.03); }
+body.dark .tbl tbody tr:hover td { background: rgba(40,209,232,.05); }
+
+/* v5：深色模式交替行背景 */
+body.dark .tbl tbody tr:nth-child(even) td {
+  background: rgba(40, 209, 232, 0.02);
+}
+
+/* ==================== 列表 / 通知 / 空态 ==================== */
+/* v5：list-item 左侧时间轴装饰线 */
+.list-item {
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid var(--brand);
+  margin-left: 0;
+  transition: background .15s ease;
+}
+.list-item:hover {
+  background: rgba(0, 82, 217, 0.03);
+}
+.list-item:last-child { border-bottom: none; }
+
+/* v5：notice 毛玻璃效果 */
+.notice {
+  display: flex; gap: var(--sp-2);
+  border-left: 3px solid var(--brand);
+  background: rgba(0,82,217,.05);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  transition: transform .15s ease;
+}
+.notice:hover { transform: translateX(2px); }
+.notice > i { font-size: 17px; margin-top: 2px; color: var(--brand); flex: none; }
+.notice.important { border-color: #e37318; background: rgba(227,115,24,.07); }
+.notice.important > i { color: #e37318; }
+.notice.emergency { border-color: #d54941; background: rgba(213,73,65,.07); }
+.notice.emergency > i { color: #d54941; }
+.notice .bd { flex: 1; min-width: 0; }
+.empty { text-align: center; color: var(--ink-3); padding: var(--sp-6) 0; }
+.empty i { font-size: 34px; display: block; margin-bottom: var(--sp-2); opacity: .6; }
+.empty p { margin: 0; font-size: var(--fs-sm); }
+
+pre.chain {
+  background: var(--chain-bg); color: var(--chain-txt);
+  font-size: var(--fs-xs); padding: var(--sp-3);
+  border-radius: var(--r-md); white-space: pre-wrap; line-height: 1.75;
+  margin: var(--sp-2) 0 0;
+  font-family: "JetBrains Mono", Consolas, monospace;
+}
+.vchart { width: 100%; }
+
+/* ==================== v5 新增：badge 数字徽标 ==================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #fff;
+  background: var(--brand);
+}
+.badge.danger { background: #d54941; }
+.badge.warn { background: #e37318; }
+.badge.success { background: #2ba471; }
+
+/* ==================== 业务组件 ==================== */
+.scen-btn {
+  display: block; width: 100%; text-align: left;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 11px 14px; margin-bottom: var(--sp-2);
+  color: var(--ink); cursor: pointer;
+  font-family: var(--app-font); font-size: var(--fs-sm);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.scen-btn:hover { border-color: var(--brand); box-shadow: var(--shadow-1); transform: translateX(2px); }
+.scen-btn b { display: flex; align-items: center; gap: 6px; }
+.scen-btn b i { color: var(--brand); }
+
+.timeline {
+  font-size: var(--fs-xs); line-height: 2.1;
+  background: var(--bg-page); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: var(--sp-3);
+  margin-top: var(--sp-3); max-height: 260px; overflow: auto;
+}
+
+/* v5：日历格子选中态弹跳动画 */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: var(--sp-2); }
+.cal .hd { text-align: center; font-size: var(--fs-xs); color: var(--ink-3); padding: 4px 0; }
+.cal .d {
+  text-align: center; padding: 9px 0;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  font-size: var(--fs-sm); cursor: pointer;
+  background: var(--bg-card); font-variant-numeric: tabular-nums;
+  transition: all .2s ease;
+}
+.cal .d:hover { border-color: var(--brand); transform: scale(1.04); }
+/* v5：选中态弹跳动画 */
+.cal .d.on {
+  background: var(--brand); color: #fff; border-color: var(--brand);
+  animation: calBounce .3s ease;
+}
+@keyframes calBounce {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.cal .d.off {
+  background: var(--bg-page); color: var(--ink-3);
+  cursor: not-allowed; border-style: dashed;
+}
+.cal .d.off:hover { border-color: var(--line); transform: none; }
+.cal .d.blank { border: none; background: none; cursor: default; }
+
+/* v5：course 卡片 hover 增强阴影 + 微抬升 */
+.course {
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: var(--sp-4); margin-bottom: var(--sp-3);
+  background: var(--bg-card);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.course:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+.course.rec { border-color: var(--brand); background: rgba(0,82,217,.03); box-shadow: 0 2px 12px rgba(0,82,217,.08); }
+.course .ttl { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.course .ttl b { font-size: var(--fs-lg); }
+.course .why { font-size: var(--fs-xs); color: var(--ink-2); margin-top: var(--sp-2); line-height: 1.8; }
+.course .why i { color: var(--brand); margin-right: 4px; }
+
+.gauge-num { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* v5：route-bar 进度条渐变色和动画 */
+.route-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 5px; }
+.route-bar i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--brand), #28d1e8);
+  border-radius: 4px;
+  animation: routeGrow .8s ease;
+}
+@keyframes routeGrow {
+  from { width: 0 !important; }
+}
+body.dark .route-bar i {
+  background: linear-gradient(90deg, #28d1e8, #4d9fff);
+}
+
+/* v5：profile-hero 背景装饰光斑 */
+.profile-hero {
+  position: relative;
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.profile-hero::before {
+  content: "";
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(40, 209, 232, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.profile-hero .av {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: linear-gradient(135deg, #1a66cc, #0fa8bd);
+  color: #fff; font-size: 24px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex: none;
+  position: relative;
+  z-index: 1;
+}
+
+.form-row { margin-bottom: var(--sp-3); }
+.form-row label { display: block; font-size: var(--fs-xs); color: var(--ink-2); margin-bottom: 6px; }
+input.native {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 8px 12px; font-size: var(--fs-md); font-family: var(--app-font);
+  background: var(--bg-card); color: var(--ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+input.native:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,82,217,.1); }
+
+/* ==================== v5 新增：hero-stat 大数据展示 ==================== */
+.hero-stat {
+  text-align: center;
+  padding: var(--sp-5);
+}
+.hero-stat .hero-num {
+  font-size: 52px;
+  font-weight: 800;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #28d1e8, #4d9fff, #28d1e8);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroGradient 3s ease infinite;
+}
+@keyframes heroGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.hero-stat .hero-lbl {
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+  margin-top: var(--sp-2);
+  letter-spacing: 1px;
+}
+.hero-stat .hero-sub {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  margin-top: var(--sp-1);
+}
+
+/* ==================== v5 新增：progress-ring 圆环进度 ==================== */
+.progress-ring {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.progress-ring svg {
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 6px rgba(40, 209, 232, 0.3));
+}
+.progress-ring .ring-bg {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 6;
+}
+.progress-ring .ring-fg {
+  fill: none;
+  stroke: #28d1e8;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+body.dark .progress-ring .ring-fg {
+  stroke: #28d1e8;
+  filter: drop-shadow(0 0 8px rgba(40, 209, 232, 0.5));
+}
+.progress-ring .ring-val {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+  font-variant-numeric: tabular-nums;
+}
+.progress-ring .ring-lbl {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+
+/* ==================== 智能助手 ==================== */
+/* v5：chat-fab 呼吸灯动画 */
+.chat-fab {
+  position: fixed; right: 26px; bottom: 26px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #0052d9, #0fa8bd);
+  color: #fff; font-size: 23px; border: none; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 82, 217, .4);
+  z-index: 60; display: flex; align-items: center; justify-content: center;
+  /* v5：呼吸灯脉冲 */
+  animation: chatPulse 2.5s ease-in-out infinite;
+}
+@keyframes chatPulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(0, 82, 217, .4), 0 0 0 0 rgba(40, 209, 232, 0.3); }
+  50% { box-shadow: 0 8px 24px rgba(0, 82, 217, .4), 0 0 0 12px rgba(40, 209, 232, 0); }
+}
+
+/* v5：chat-panel 毛玻璃效果 */
+.chat-panel {
+  position: fixed; right: 26px; bottom: 92px;
+  width: 340px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  z-index: 60; display: flex; flex-direction: column; max-height: 460px; overflow: hidden;
+}
+.chat-panel .head {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: 12px 16px;
+  background: linear-gradient(90deg, #0d2a52, #123a74);
+  color: #fff; font-size: var(--fs-md);
+}
+.chat-msgs {
+  flex: 1; overflow: auto;
+  padding: var(--sp-3);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  min-height: 120px;
+}
+.msg {
+  max-width: 86%;
+  padding: 8px 12px;
+  border-radius: 10px; font-size: var(--fs-sm);
+  line-height: 1.7; white-space: pre-wrap;
+}
+
+/* v5：msg.me 渐变背景 */
+.msg.me {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--brand), #0a6fd9);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 82, 217, 0.2);
+}
+
+/* v5：msg.bot 左侧品牌色竖线装饰 */
+.msg.bot {
+  align-self: flex-start;
+  background: var(--bg-page);
+  border: none;
+  border-left: 3px solid var(--brand);
+  border-radius: 0 10px 10px 0;
+  padding-left: var(--sp-4);
+}
+body.dark .msg.bot {
+  border-left-color: #28d1e8;
+  background: rgba(14, 28, 60, 0.5);
+}
+
+.chat-in {
+  display: flex; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ==================== 细节质感层 ==================== */
+/* KPI 数字用 DIN 风格字体，等宽数字避免跳动 */
+.kpi .num, .gauge-num, .t-statistic, .hero-stat .hero-num {
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+}
+
+/* v5：slideUp 进场动画（比 fadein 更有动感） */
+main > * { animation: slideUp .35s cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* v5：pulse 呼吸灯 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes blink { 50% { opacity: .5; } }
+.blink { animation: blink 1.2s infinite; }
+
+/* v5：骨架屏 shimmer 保持并加圆角 */
+.skl {
+  border-radius: var(--r-lg);
+  background: linear-gradient(100deg, var(--bg-card) 40%, rgba(0,82,217,.06) 50%, var(--bg-card) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+  border: 1px solid var(--line);
+  margin-bottom: var(--sp-4);
+}
+body.dark .skl {
+  background: linear-gradient(100deg, var(--bg-card) 40%, rgba(40,209,232,.08) 50%, var(--bg-card) 60%);
+  background-size: 200% 100%;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* v5：toast 毛玻璃背景 */
+.toast {
+  position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-2);
+  border-radius: var(--r-md);
+  padding: 10px 18px; z-index: 99;
+  display: flex; gap: var(--sp-2); align-items: center;
+  font-size: var(--fs-sm);
+  animation: slideUp .2s ease;
+  max-width: 70vw;
+}
+.toast.success i { color: #2ba471; }
+.toast.error i { color: #d54941; }
+.toast i { font-size: 17px; }
+
+/* TDesign 无紫色 tag，补一个 */
+.t-tag--purple.t-tag--light { background: #f3ebfd; color: #7b46d1; }
+body.dark .t-tag--purple.t-tag--light { background: #2a1b4a; color: #c39fff; }
+.t-tag i { margin-right: 3px; }
+
+/* 原生表单件统一皮肤 */
+input.native, select.native, textarea.native {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 8px 12px; font-size: var(--fs-md); font-family: var(--app-font);
+  background: var(--bg-card); color: var(--ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+input.native:focus, select.native:focus, textarea.native:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(0,82,217,.12);
+}
+select.native.inline, input.native.inline { width: auto; }
+
+/* 顶栏运行模式徽标与退出按钮 */
+#mode-pill { display: inline-flex; align-items: center; gap: 5px; }
+.app-header .logout {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.14); border: none;
+  color: #fff; padding: 7px 14px; border-radius: 6px;
+  cursor: pointer; font-size: var(--fs-sm); font-family: var(--app-font);
+  transition: background .15s ease;
+}
+.app-header .logout:hover { background: rgba(255,255,255,.24); }
+
+/* ==================== v5 新增：glow-text 文字发光 ==================== */
+.glow-text {
+  text-shadow:
+    0 0 8px rgba(40, 209, 232, 0.4),
+    0 0 20px rgba(40, 209, 232, 0.2),
+    0 0 40px rgba(40, 209, 232, 0.1);
+  color: #28d1e8;
+}
+body:not([theme-mode="dark"]) .glow-text {
+  text-shadow:
+    0 0 8px rgba(0, 82, 217, 0.3),
+    0 0 20px rgba(0, 82, 217, 0.15);
+  color: var(--brand);
+}
+
+/* ==================== v5 新增：gradient-text 渐变文字 ==================== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand), #28d1e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ==================== v5 新增：divider 分割线 ==================== */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+}
+body.dark .divider::before,
+body.dark .divider::after {
+  background: linear-gradient(90deg, transparent, rgba(40, 209, 232, 0.2), transparent);
+}
+
+/* ==================== v5 新增：status-dot 状态点 ==================== */
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.status-dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.online::before { background: #2ba471; box-shadow: 0 0 6px rgba(43, 164, 113, 0.5); }
+.status-dot.offline::before { background: var(--ink-3); }
+.status-dot.warning::before { background: #e37318; box-shadow: 0 0 6px rgba(227, 115, 24, 0.5); }
+.status-dot.error::before { background: #d54941; box-shadow: 0 0 6px rgba(213, 73, 65, 0.5); animation: pulse 1.5s infinite; }
+.status-dot.busy::before { background: #e37318; animation: pulse 1.2s infinite; }
+
+/* ==================== v5 新增：data-grid 数据网格 ==================== */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-3);
+}
+@media (max-width: 900px) {
+  .data-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .data-grid { grid-template-columns: 1fr; }
+}
+.data-grid .data-cell {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  text-align: center;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.data-grid .data-cell:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-1);
+}
+.data-grid .data-cell .cell-val {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+}
+.data-grid .data-cell .cell-lbl {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  margin-top: var(--sp-1);
+}
+
+/* ==================== v5 新增：metric-row 指标行 ==================== */
+.metric-row {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  padding: var(--sp-3) 0;
+}
+.metric-row .metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 80px;
+}
+.metric-row .metric-val {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", var(--app-font);
+}
+.metric-row .metric-lbl {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ==================== 深色大屏专项（admin） ==================== */
+body.dark .panel { border-color: rgba(40, 209, 232, 0.15); }
+body.dark .panel-hd { border-color: rgba(40, 209, 232, 0.1); }
+body.dark .panel-hd i { color: #28d1e8; }
+body.dark .panel-hd h3 { color: #9fd8ff; letter-spacing: 1px; }
+
+/* v5：深色模式下 panel-hd h3 发光 */
+body.dark .panel-hd h3 {
+  text-shadow: 0 0 8px rgba(40, 209, 232, 0.3);
+}
+
+/* v5：深色模式下 tbl th 背景加深 */
+body.dark .tbl th {
+  background: rgba(40, 209, 232, 0.06);
+  border-bottom-color: rgba(40, 209, 232, 0.1);
+}
+
+/* v5：深色面板扫描线（可选，subtle） */
+body.dark .panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(40, 209, 232, 0.008) 2px,
+    rgba(40, 209, 232, 0.008) 4px
+  );
+  pointer-events: none;
+  border-radius: var(--r-lg);
+}
+
+/* v5：应急闪烁效果 */
+body.dark .emergency-flash {
+  animation: emergencyFlash 1s ease-in-out infinite;
+}
+@keyframes emergencyFlash {
+  0%, 100% { background-color: rgba(213, 73, 65, 0.05); }
+  50% { background-color: rgba(213, 73, 65, 0.15); }
+}
+body.dark .emergency-flash .panel-hd h3 {
+  color: #ff8f8a;
+  text-shadow: 0 0 12px rgba(213, 73, 65, 0.5);
+}
+
+/* ==================== 响应式补充 ==================== */
+/* v5：chat-panel 移动端适配 */
+@media (max-width: 520px) {
+  .chat-panel {
+    right: 8px; left: 8px; width: auto; bottom: 80px;
+  }
+  .chat-fab { right: 16px; bottom: 16px; }
+  main { padding: 0 var(--sp-3); }
+}
+
+/* v5：hero-stat 响应式 */
+@media (max-width: 520px) {
+  .hero-stat .hero-num { font-size: 36px; }
+  .progress-ring { padding: var(--sp-2); }
+}
+
+/* v5：kpi-row 紧凑适配 */
+@media (max-width: 600px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .metric-row { gap: var(--sp-3); }
+}
+
+</style>
+</head>
+<body>
+
+<div id="login-view" class="login-view">
+  <div class="login-grid">
+    <div class="brand-side">
+      <div class="brand-badge"><i class="ri-shield-star-line"></i></div>
+      <h1>红门哨兵</h1>
+      <div class="sub">大兴区西红门实验二小 · 校园智能体<br>急时安全哨兵 × 平时教联体数字底座</div>
+      <div class="feat"><i class="ri-radar-line"></i><div><b>四层闭环</b><span>感知 → 认知（本体多模态融合）→ 决策（预案矩阵）→ 处置（工单/通知回执）</span></div></div>
+      <div class="feat"><i class="ri-user-heart-line"></i><div><b>一人一档，不一人一号</b><span>学生不设账号，健康/体测/成绩/选修课档案由家长账号内嵌查看，三级守卫控权</span></div></div>
+      <div class="feat"><i class="ri-community-line"></i><div><b>校社联动</b><span>共享空间平急两用 · 随手拍 AI 分类派单 · 场馆口碑互助</span></div></div>
+    </div>
+    <div class="acct-panel">
+      <div class="hd"><i class="ri-shield-user-line"></i> 选择身份进入系统</div>
+      <div id="quick-panel"></div>
+      <div class="login-err" id="li-err"></div>
+      <div class="login-note">演示环境 · 点选身份进入 · 学生实行「一人一档、不一人一号」，档案由家长账号内嵌查看</div>
+    </div>
+  </div>
+</div>
+
+<div id="app-view" class="hidden" style="display:none">
+<header class="app-header">
+  <span class="logo"><i class="ri-shield-star-line"></i> 红门哨兵</span>
+  <span id="mode-pill" class="t-tag t-tag--success t-tag--dark"><i class="ri-checkbox-circle-line"></i> 正常运行</span>
+  <span class="spacer"></span>
+  <span class="who" id="who"></span>
+  <button class="logout" onclick="logout()"><i class="ri-logout-box-r-line"></i> 退出</button>
+</header>
+<nav id="nav" class="app-nav"></nav>
+<main id="main"></main>
+
+<button class="chat-fab" onclick="toggleChat()" title="智能助手"><i class="ri-robot-2-line"></i></button>
+<div class="chat-panel" id="chat-panel" style="display:none">
+  <div class="head"><i class="ri-sparkling-2-line"></i> 智能助手（角色感知意图路由）</div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-in">
+    <input id="chat-input" class="native" placeholder="输入问题…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="t-button t-button--theme-primary t-button--variant-base t-size-s" onclick="sendChat()"><i class="ri-send-plane-fill"></i></button>
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+/* ============================================================
+   模拟数据常量 - 红门哨兵 独立演示版
+   ============================================================ */
+const _ACCOUNTS = [
+  { id: 1, username: "admin", name: "赵校长", role: "admin", role_label: "校长" },
+  { id: 2, username: "teacher", name: "李老师", role: "teacher", role_label: "班主任", class_name: "六年级1班" },
+  { id: 3, username: "parent", name: "王女士", role: "parent", role_label: "家长", class_name: "六年级1班" },
+  { id: 4, username: "community", name: "张主任", role: "community", role_label: "社区·红门管家" },
+];
+const _SESSIONS = {
+  admin: { user_id: 1, name: "赵校长", role: "admin", extra: {} },
+  teacher: { user_id: 2, name: "李老师", role: "teacher", extra: { manage_class: "六年级1班" } },
+  parent: { user_id: 3, name: "王女士", role: "parent", extra: { child_class: "六年级1班" } },
+  community: { user_id: 4, name: "张主任", role: "community", extra: {} },
+};
+const _CHILDREN_BY_PARENT = { 3: [{ id: 101, name: "小明", class_name: "六年级1班", grade: 6, interests: ["篮球", "科学"] }] };
+
+const _TELEMETRY = [
+  { device_id: "iot-water-eastgate-01", name: "东门下凹路段水位计", zone: "东门下凹路段", metric: "water_level_cm", unit: "cm", value: 3.2, threshold_high: 15, is_anomaly: false },
+  { device_id: "iot-weather-roof-01", name: "屋面微气象站", zone: "全校", metric: "wind_ms", unit: "m/s", value: 4.1, threshold_high: 13.9, is_anomaly: false },
+  { device_id: "iot-air-class601-01", name: "六年级1班甲醛监测", zone: "翻新教室(六年级1班)", metric: "hcho_mg", unit: "mg/m\u00b3", value: 0.03, threshold_high: 0.08, is_anomaly: false },
+  { device_id: "iot-tvoc-class601-01", name: "六年级1班TVOC监测", zone: "翻新教室(六年级1班)", metric: "tvoc_mg", unit: "mg/m\u00b3", value: 0.22, threshold_high: 0.60, is_anomaly: false },
+  { device_id: "iot-fridge-canteen-01", name: "食堂留样柜温度", zone: "食堂留样间", metric: "fridge_temp_c", unit: "\u2103", value: 4.5, threshold_high: 8, is_anomaly: false },
+  { device_id: "iot-noise-eastgate-01", name: "东门噪音计", zone: "东门", metric: "noise_db", unit: "dB", value: 62, threshold_high: 70, is_anomaly: false },
+  { device_id: "iot-noise-stair-01", name: "楼梯间噪音计", zone: "六年级教学楼·楼梯间", metric: "stair_noise_db", unit: "dB", value: 71, threshold_high: 75, is_anomaly: false },
+  { device_id: "iot-parking-tower-01", name: "商务楼宇车位地磁", zone: "京开辅路口", metric: "occupied", unit: "辆", value: 41, threshold_high: null, is_anomaly: false },
+  { device_id: "iot-parking-plaza-01", name: "理想城商业广场车位地磁", zone: "理想城", metric: "occupied", unit: "辆", value: 62, threshold_high: null, is_anomaly: false },
+  { device_id: "cam-eastgate-01", name: "东门边缘AI相机", zone: "东门", metric: "crowd_density", unit: "", value: 0.3, threshold_high: 0.8, is_anomaly: false },
+  { device_id: "cam-southgate-01", name: "南门边缘AI相机", zone: "南门", metric: "fire_channel_blocked", unit: "", value: 0, threshold_high: 1, is_anomaly: false },
+  { device_id: "cam-kitchen-01", name: "明厨亮灶边缘AI", zone: "食堂后厨", metric: "hygiene_score", unit: "", value: 0.95, threshold_high: 0.7, is_anomaly: false },
+  { device_id: "cam-stair-g6-01", name: "楼梯间边缘AI相机", zone: "六年级教学楼·楼梯间", metric: "density_score", unit: "", value: 0.4, threshold_high: 0.8, is_anomaly: false },
+];
+
+let _HAZARDS = [
+  { id: 1, hazard_class: "fire_channel_blocked", zone: "南门", severity: 2, status: "active", created_at: "2026-07-12T07:30:00",
+    sources: [{ type: "vision", detail: "南门边缘AI相机检测到消防通道被违停车辆占用" }],
+    inference: "视觉模态：南门AI相机识别消防通道区域存在连续遮挡\n→ 信号强度：high（置信度0.92）\n→ 多模态交叉：单路确认\n→ 风险级别：一般（severity=2）\n→ 本体推理：消防通道占用属 campus_safety 本体事件",
+    suggestion: "建议通知物业挪车，并增加放学时段巡查频次" },
+];
+
+const _INCIDENTS = [
+  { ticket_no: "INC-001", description: "东门下凹路段积水较深，孩子通行困难", location: "东门下凹路段", category: "flood", source: "citizen", reporter_id: 3, assignee: "总务处·陈工", priority: 3, status: "processing", created_at: "2026-07-11T08:20:00" },
+  { ticket_no: "INC-002", description: "六年级1班课桌腿松动摇晃", location: "六年级1班", category: "facility", source: "asset", reporter_id: 1, assignee: "总务处·陈工", priority: 2, status: "dispatched", created_at: "2026-07-10T14:00:00" },
+  { ticket_no: "INC-003", description: "食堂后厨发现老鼠痕迹", location: "食堂后厨", category: "food", source: "vision", reporter_id: null, assignee: "食堂·刘主管", priority: 4, status: "processing", created_at: "2026-07-09T06:30:00" },
+  { ticket_no: "INC-004", description: "南门放学时段游商占道", location: "南门", category: "vendor", source: "citizen", reporter_id: 2, assignee: "安保组·王队长", priority: 2, status: "resolved", created_at: "2026-07-08T16:10:00" },
+];
+const _INCIDENT_STATS = { total: 4, by_source: { citizen: 2, vision: 1, asset: 1 }, by_status: { processing: 2, dispatched: 1, resolved: 1 } };
+
+const _NOTIFICATIONS = [
+  { id: 1, title: "【班级通知】明日校服日+带科学实验材料", body: "六年级1班：明天请穿校服；科学课请带上周发的实验材料包。", level: "info", created_by: "李老师", created_at: "2026-07-12T07:00:00", read_at: null, audience_roles: ["parent"], audience_class: "六年级1班" },
+  { id: 2, title: "【体测通知】下周三校内体测（跳绳/50米/坐位体前屈）", body: "请给孩子穿运动鞋。体测成绩自动进入孩子空间的体质档案，弱项会生成锻炼处方并联动选修课推荐。", level: "important", created_by: "李老师", created_at: "2026-07-11T09:00:00", read_at: "2026-07-11T10:00:00", audience_roles: ["parent"], audience_class: "六年级1班" },
+  { id: 3, title: "【资产闭环】六年级1班课桌椅更换已进入采购流程", body: "资产台账显示该班课桌椅2017年购置、成色2/5，年检身高匹配率80%。校务会已批准列入本学期采购计划。", level: "info", created_by: "赵校长", created_at: "2026-07-10T15:00:00", read_at: null, audience_roles: ["parent", "teacher", "admin"], audience_class: null },
+  { id: 4, title: "【家庭安全提示】厨房用火用刀，请家长看护", body: "周末在家：燃气灶使用后关阀；刀具收纳远离孩子取用高度；教会孩子烫伤先冲冷水。（本提示由学校推送给家长，校园AI不进入家庭场景）", level: "info", created_by: "赵校长", created_at: "2026-07-09T18:00:00", read_at: null, audience_roles: ["parent"], audience_class: null },
+  { id: 5, title: "【教联体】街道文体中心游泳馆校合作课开放报名", body: "每周四放学后，教练由文体中心提供。可在选修课页查看孩子的个性化推荐。", level: "info", created_by: "赵校长", created_at: "2026-07-08T10:00:00", read_at: null, audience_roles: ["parent", "teacher"], audience_class: null },
+];
+
+const _RESOURCES = [
+  { id: 1, name: "街道文体中心·篮球馆", category: "共享空间", address: "西红门镇兴华大街12号（距校650米）", capacity: 200, contact: "6021-0001", emergency_role: "应急避难点", open_hours: { "平日": "放学后", "周末": "全天" } },
+  { id: 2, name: "理想城社区·多功能活动室", category: "共享空间", address: "理想城小区北门（距校400米）", capacity: 80, contact: "6021-0002", emergency_role: "临时集散点", open_hours: { "全周": "预约开放" } },
+  { id: 3, name: "社区卫生服务中心·健康小屋", category: "实践基地", address: "欣荣大街9号（距校500米）", capacity: 30, contact: "6021-0003", emergency_role: "应急医疗点", open_hours: { "工作日": "8:00-17:00" } },
+  { id: 4, name: "区图书馆·少儿分馆", category: "实践基地", address: "兴丰大街38号（距校1.2公里）", capacity: 120, contact: "6021-0004", emergency_role: "备用安置点", open_hours: { "周二至周日": "9:00-17:00" } },
+  { id: 5, name: "消防救援站·科普教室", category: "实践基地", address: "西红门消防站（距校900米）", capacity: 40, contact: "6021-0005", emergency_role: "消防联动点", open_hours: { "全周": "预约开放" } },
+  { id: 6, name: "商务楼宇·错峰共享车位", category: "错峰停车", address: "京开辅路口写字楼B1（距校300米）", capacity: 60, contact: "6021-0006", emergency_role: "应急车辆集结区", open_hours: { "早高峰": "7:00-9:00", "晚高峰": "16:00-18:00" } },
+  { id: 7, name: "理想城商业广场·错峰车位", category: "错峰停车", address: "理想城商业广场P2（距校450米）", capacity: 80, contact: "6021-0008", emergency_role: null, open_hours: { "早高峰": "7:00-9:00", "晚高峰": "15:00-18:00" } },
+  { id: 8, name: "科技园·青少年创客空间", category: "实践基地", address: "西红门科技园3号楼（距校1.5公里）", capacity: 50, contact: "6021-0007", emergency_role: null, open_hours: { "周末": "9:00-16:00" } },
+  { id: 9, name: "人防工程·地下活动空间", category: "共享空间", address: "欣旺大街地下人防（距校800米）", capacity: 300, contact: "6021-0009", emergency_role: "人防掩蔽所", open_hours: { "全周": "预约开放" } },
+];
+const _EMERGENCY_MAP = _RESOURCES.filter(r => r.emergency_role);
+const _PARKING = [
+  { name: "商务楼宇·错峰共享车位", status: "充足", free: 19, capacity: 60, address: "京开辅路口写字楼B1" },
+  { name: "理想城商业广场·错峰车位", status: "紧张", free: 18, capacity: 80, address: "理想城商业广场P2" },
+];
+const _BOOKINGS = [
+  { booking_no: "BK-DEMO-001", resource_id: 1, user_id: 2, date: "2026-07-15", start_time: "15:40", end_time: "17:00", purpose: "六年级1班篮球选修课外训（馆校合作）", attendees: 24, status: "confirmed" },
+];
+
+const _INSPECTIONS = {
+  summary: { total: 7, overdue: 1, due_soon: 1, failed: 1 },
+  alerts: ["\u26a0\ufe0f 消防器材（灭火器96具）已超期未复检（到期日：2026-07-07）", "\u26a0\ufe0f 直饮水机滤芯即将临期（到期日：2026-07-22）"],
+  records: [
+    { target: "翻新教室(六年级1班)", category: "renovation", category_label: "甲醛/TVOC", item: "甲醛/TVOC第三方检化验（CMA资质）", result: "甲醛0.05mg/m\u00b3、TVOC0.38mg/m\u00b3，均低于GB/T 18883限值", report_no: "JHY-2025-0817", inspect_date: "2025-08-25", next_due: "2026-08-25", passed: true, due_status: "正常" },
+    { target: "教学楼直饮水机(6台)", category: "water", category_label: "直饮水", item: "滤芯更换与水质检测", result: "菌落总数/重金属合格，滤芯已全部更换", report_no: "SZJ-2025-1102", inspect_date: "2026-04-23", next_due: "2026-07-22", passed: true, due_status: "临期" },
+    { target: "全校灭火器(96具)", category: "fire", category_label: "消防", item: "压力表效期年检", result: "94具正常；2具压力不足已换新", report_no: null, inspect_date: "2025-12-24", next_due: "2026-07-07", passed: true, due_status: "已超期" },
+    { target: "六年级1班教室", category: "lighting", category_label: "照明", item: "课桌面照度检测（GB 7793≥300lx）", result: "平均照度412lx，黑板面564lx，合格", report_no: "ZD-2025-0901", inspect_date: "2025-09-10", next_due: "2026-09-10", passed: true, due_status: "正常" },
+    { target: "操场单双杠/攀爬架", category: "sports", category_label: "体育器械", item: "螺栓紧固与锈蚀检查", result: "单双杠底座螺栓锈蚀2处，已停用待检修", report_no: null, inspect_date: "2026-06-22", next_due: "2026-12-19", passed: false, due_status: "正常" },
+    { target: "各班急救箱(30个)", category: "medkit", category_label: "急救箱", item: "药品耗材效期盘点", result: "全部在效期内；碘伏棉签下月到期已列入采购", report_no: null, inspect_date: "2026-07-02", next_due: "2026-12-29", passed: true, due_status: "正常" },
+    { target: "六年级课桌椅", category: "furniture", category_label: "课桌椅", item: "GB/T 3976身高-型号匹配率抽检", result: "六年级1班匹配率80%，1名同学建议调整2号桌", report_no: null, inspect_date: "2026-07-07", next_due: "2027-07-07", passed: true, due_status: "正常" },
+  ]
+};
+const _DESK_FIT = { fit_rate: 0.80, current_model: "3号桌（高度140-149cm）", sampled: 5, need_adjust: [{ student_name: "小志", suggest: "2号桌（高座150-159cm）" }], note: "匹配率联动体检档案身高数据，每学期年检自动更新" };
+const _RETIREMENT_LIST = [
+  { name: "室外单双杠", code: "AS-SPORT-RACK", location: "操场", quantity: 6, purchased_year: 2016, reason: "超龄10年+螺栓锈蚀，年检不合格", suggestion: "建议报废并采购新型号替换" },
+  { name: "课桌椅（六年级1班）", code: "AS-G6C1-DESK", location: "六年级1班", quantity: 45, purchased_year: 2017, reason: "成色2/5，校务会已批准更换", suggestion: "已列入本学期采购计划" },
+];
+
+const _CHILD_PROFILE = {
+  student: { name: "小明", class_name: "六年级1班", grade: 6, gender: "男", birth_year: 2014, interests: ["篮球", "科学"] },
+  note: "孩子档案仅本家长可查看，三级守卫控权",
+  health_records: [
+    { term: "2024-2025上", height_cm: 148.0, weight_kg: 45.5, vision_left: 5.0, vision_right: 5.0, dental_caries: 1 },
+    { term: "2024-2025下", height_cm: 151.0, weight_kg: 50.0, vision_left: 4.9, vision_right: 5.0, dental_caries: 1 },
+    { term: "2025-2026上", height_cm: 153.5, weight_kg: 54.8, vision_left: 4.8, vision_right: 4.9, dental_caries: 0 },
+  ],
+  bmi: { bmi: 23.2, status: "超重" },
+  vision: { latest: 4.8, alert: true, advice: "小明连续两学期视力下滑，建议控制电子屏幕时间，每天户外活动≥2小时，并到眼科做详细检查。", basis: "连续3次体检视力记录显示左眼4.8、右眼4.9，均低于5.0标准线" },
+  nutrition: { status: "超重", tips: ["控制零食和含糖饮料", "增加蔬菜摄入，减少油炸食物", "每天保证60分钟中等强度运动"], suggest_supplements: ["维生素D", "钙"], disclaimer: "营养建议仅供参考，不构成医疗诊断。具体营养方案请咨询专业医生或营养师。" },
+  fitness: {
+    avg_score: 70, weak_items: ["一分钟跳绳", "肺活量"],
+    records: [
+      { term: "2024-2025下", item: "一分钟跳绳", value: 72, unit: "个/分钟", score: 60, source: "manual" },
+      { term: "2024-2025下", item: "50米跑", value: 9.8, unit: "秒", score: 70, source: "manual" },
+      { term: "2025-2026上", item: "一分钟跳绳", value: 78, unit: "个/分钟", score: 60, source: "ai_video" },
+      { term: "2025-2026上", item: "50米跑", value: 9.5, unit: "秒", score: 70, source: "manual" },
+      { term: "2025-2026上", item: "坐位体前屈", value: 14.5, unit: "cm", score: 90, source: "manual" },
+      { term: "2025-2026上", item: "肺活量", value: 1850, unit: "ml", score: 70, source: "manual" },
+      { term: "2025-2026上", item: "仰卧起坐", value: 33, unit: "个/分钟", score: 70, source: "manual" },
+    ],
+    prescriptions: [{ item: "一分钟跳绳", plan: "每天练习3组×1分钟，每组间歇30秒休息。使用AI视频打卡记录进步。" }],
+  },
+  academic: [
+    { subject: "语文", term: "2024-2025下", level: "良" }, { subject: "数学", term: "2024-2025下", level: "中" },
+    { subject: "英语", term: "2024-2025下", level: "良" }, { subject: "科学", term: "2024-2025下", level: "优" },
+    { subject: "语文", term: "2025-2026上", level: "良" }, { subject: "数学", term: "2025-2026上", level: "待提高" },
+    { subject: "英语", term: "2025-2026上", level: "良" }, { subject: "科学", term: "2025-2026上", level: "优" },
+  ],
+  external_classes: [{ id: 1, category: "体育", name: "XX篮球俱乐部周末班", weekly_hours: 3 }],
+};
+
+const _COURSES = [
+  { id: 1, name: "花样跳绳", category: "体育", teacher: "体育组·孙老师", weekday: 1, time_slot: "15:40-16:40", capacity: 30, enrolled: 12, intro: "国家体测重点项目专项课，AI视频计数辅助打卡" },
+  { id: 2, name: "田径基础", category: "体育", teacher: "体育组·钱老师", weekday: 3, time_slot: "15:40-16:40", capacity: 25, enrolled: 20, intro: "跑跳投基础，改善速度与耐力" },
+  { id: 3, name: "校园篮球", category: "体育", teacher: "体育组·周老师", weekday: 5, time_slot: "15:40-16:40", capacity: 24, enrolled: 24, intro: "小篮球规则，班级联赛" },
+  { id: 4, name: "游泳启蒙(馆校合作)", category: "体育", teacher: "街道文体中心教练", weekday: 4, time_slot: "15:40-17:00", capacity: 20, enrolled: 8, intro: "与街道文体中心合作课程，提升肺活量" },
+  { id: 5, name: "数学思维游戏", category: "科技", teacher: "数学组·吴老师", weekday: 1, time_slot: "15:40-16:40", capacity: 30, enrolled: 15, intro: "数独/逻辑推理/趣味建模，夯实数学基础" },
+  { id: 6, name: "趣味编程入门", category: "科技", teacher: "信息组·郑老师", weekday: 2, time_slot: "15:40-16:40", capacity: 20, enrolled: 18, intro: "图形化编程，做小游戏" },
+  { id: 7, name: "科学实验站", category: "科技", teacher: "科学组·冯老师", weekday: 4, time_slot: "15:40-16:40", capacity: 24, enrolled: 10, intro: "动手实验：光、电、水的奥秘" },
+  { id: 8, name: "合唱团", category: "艺术", teacher: "音乐组·陈老师", weekday: 2, time_slot: "15:40-16:40", capacity: 40, enrolled: 25, intro: "校合唱团梯队，区艺术节展演" },
+  { id: 9, name: "经典朗读与演讲", category: "人文", teacher: "语文组·许老师", weekday: 3, time_slot: "15:40-16:40", capacity: 30, enrolled: 9, intro: "AI朗读评测辅助纠音，提升表达自信" },
+  { id: 10, name: "校园小农田", category: "劳动", teacher: "劳动组·何老师", weekday: 5, time_slot: "15:40-16:40", capacity: 20, enrolled: 6, intro: "种植观察+劳动教育，收获归班级" },
+];
+const _ENROLLMENTS = [{ id: 1, course_id: 9, name: "经典朗读与演讲", category: "人文", weekday: 3, time_slot: "15:40-16:40", teacher: "语文组·许老师", reason_snapshot: "推荐理由快照：语文评价为「良」，朗读课提升表达；周二时段无冲突" }];
+
+const _LEAVES = [
+  { id: 1, student_id: 101, student_name: "小明", start_date: "2026-06-02", end_date: "2026-06-03", days: 2, leave_type: "sick", symptoms: ["发热", "咳嗽"], note: "流感就医", status: "approved", approved_by: "李老师" },
+  { id: 2, student_id: 101, student_name: "小明", start_date: "2026-06-27", end_date: "2026-06-27", days: 1, leave_type: "personal", symptoms: [], note: "家庭事务", status: "approved", approved_by: "李老师" },
+  { id: 3, student_id: 101, student_name: "小明", start_date: "2026-07-13", end_date: "2026-07-13", days: 1, leave_type: "sick", symptoms: ["咳嗽"], note: "夜间咳嗽加重，明日就医", status: "pending", approved_by: null },
+];
+const _PENDING_LEAVES = [_LEAVES[2]];
+const _CLASS_STATS = { class_name: "六年级1班", stats: [
+  { student_name: "小明", month_days: 1, term_days: 3, sick_days: 2, personal_days: 1 },
+  { student_name: "小雨", month_days: 0, term_days: 1, sick_days: 1, personal_days: 0 },
+  { student_name: "小志", month_days: 0, term_days: 0, sick_days: 0, personal_days: 0 },
+  { student_name: "小蕊", month_days: 0, term_days: 2, sick_days: 2, personal_days: 0 },
+  { student_name: "小航", month_days: 1, term_days: 1, sick_days: 0, personal_days: 1 },
+] };
+const _ILLNESS_WATCH = { window_days: 3, threshold: 3, classes: [] };
+const _MEAL_DAYS = [1,2,3,4,5,6,7,8,9,10,11,14,15,16,17,18,21,22,23,24,25,28,29,30,31];
+const _MEAL_BILL = { amount: 364, days_count: 26, price_per_meal: 14, payment: "后付费，每月账单推送到家长账号" };
+
+const _CANTEEN_BOARD = {
+  food_safety_index: 92, sample_compliance_rate: 1.0, cold_chain_ok: true, open_food_tickets: 1,
+  recent_samples: [
+    { date: "2026-07-12", meal: "lunch", dish: "西红柿炒鸡蛋", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-12", meal: "lunch", dish: "土豆炖牛肉", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-12", meal: "lunch", dish: "二米饭", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-11", meal: "lunch", dish: "宫保鸡丁", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-11", meal: "lunch", dish: "清炒豆芽", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-11", meal: "lunch", dish: "红薯排骨", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-10", meal: "lunch", dish: "鱼香肉丝", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-10", meal: "lunch", dish: "番茄炒蛋", weight_g: 125, operator: "食堂·刘师傅" },
+    { date: "2026-07-10", meal: "lunch", dish: "玉米排骨", weight_g: 125, operator: "食堂·刘师傅" },
+  ],
+  fridge_temps: Array.from({length:24},(_,i)=>({at:"2026-07-12T"+String(i).padStart(2,"0")+":00",value:Math.round((3.5+Math.random()*3)*10)/10,is_anomaly:false}))
+};
+
+const _KITCHEN_FORECAST = { date: "2026-07-12", total: 156, by_class: [
+  { class_name: "六年级1班", count: 42 }, { class_name: "六年级2班", count: 38 },
+  { class_name: "五年级1班", count: 40 }, { class_name: "其他班级", count: 36 },
+], note: "数据来源：家长用餐日历勾选汇总，实时按学生请假状态扣减" };
+
+const _ASSETS = [
+  { code: "AS-G6C1-DESK", name: "课桌椅（六年级1班）", location: "六年级1班", grade: 6, class_name: "六年级1班", quantity: 45, purchased_year: 2017, condition: 2, category: "desk", air_device_id: null },
+  { code: "AS-G6-DESK", name: "课桌椅（六年级2-6班）", location: "六年级教学楼", grade: 6, quantity: 135, purchased_year: 2019, condition: 3, category: "desk", air_device_id: null },
+  { code: "AS-G1G5-DESK", name: "课桌椅（1-5年级）", location: "低中年级教学楼", grade: null, quantity: 900, purchased_year: 2021, condition: 4, category: "desk", air_device_id: null },
+  { code: "AS-SPORT-RACK", name: "室外单双杠", location: "操场", quantity: 6, purchased_year: 2016, condition: 2, category: "sports", air_device_id: null },
+  { code: "AS-RENO-601", name: "暑期翻新工程（六年级1班）", location: "翻新教室(六年级1班)", grade: 6, class_name: "六年级1班", quantity: 1, purchased_year: 2025, condition: 5, category: "renovation", air_device_id: "iot-air-class601-01" },
+];
+const _ASSET_SUMMARY = [
+  { grade: "1", avg_condition: 4.2, worst: 3 }, { grade: "2", avg_condition: 4.1, worst: 3 },
+  { grade: "3", avg_condition: 4.0, worst: 3 }, { grade: "4", avg_condition: 4.0, worst: 3 },
+  { grade: "5", avg_condition: 3.8, worst: 3 }, { grade: "6", avg_condition: 2.8, worst: 2 },
+];
+
+const _PICKUP = Array.from({length:5},(_,i)=>({class_name:"六年级1班",weekday:i,dismiss_time:"15:40",gate:"东门",note:"课后服务日16:40离校"}));
+const _COMMUTE = [
+  { name: "东门→京开辅路", score: 72, level: "caution", notes: ["放学高峰拥堵","下凹路段易积水"] },
+  { name: "东门→理想城小区", score: 85, level: "recommended", notes: ["人行道完整","护学岗到位"] },
+  { name: "南门→兴华大街", score: 90, level: "recommended", notes: ["照明充足","人行道宽敞"] },
+];
+
+const _MATRIX = [
+  { alert_type: "rainstorm", alert_level: "blue", mode: "normal", mode_label: "正常运行", actions: [{ text: "检查排水设施", auto: false, owner: "总务处" }, { text: "通知各班户外活动风险", auto: true, owner: "AI" }] },
+  { alert_type: "rainstorm", alert_level: "yellow", mode: "normal", mode_label: "正常运行", actions: [{ text: "加强东门下凹路段巡查", auto: false, owner: "安保组" }] },
+  { alert_type: "rainstorm", alert_level: "orange", mode: "staggered", mode_label: "错峰放学", actions: [{ text: "切换为错峰放学模式", auto: true, owner: "AI" }, { text: "通知家长接送时间变更", auto: true, owner: "AI" }] },
+  { alert_type: "rainstorm", alert_level: "red", mode: "home_study", mode_label: "居家学习", actions: [{ text: "发布停课通知", auto: true, owner: "AI" }, { text: "启动在线学习方案", auto: true, owner: "AI" }] },
+  { alert_type: "typhoon", alert_level: "blue", mode: "normal", mode_label: "正常运行", actions: [{ text: "检查窗外物品固定", auto: false, owner: "总务处" }] },
+  { alert_type: "typhoon", alert_level: "yellow", mode: "staggered", mode_label: "错峰放学", actions: [{ text: "切换为错峰放学", auto: true, owner: "AI" }] },
+  { alert_type: "typhoon", alert_level: "orange", mode: "indoor", mode_label: "室内活动", actions: [{ text: "取消户外活动", auto: true, owner: "AI" }] },
+  { alert_type: "typhoon", alert_level: "red", mode: "home_study", mode_label: "居家学习", actions: [{ text: "停课通知", auto: true, owner: "AI" }] },
+  { alert_type: "earthquake", alert_level: "blue", mode: "normal", mode_label: "正常运行", actions: [{ text: "检查应急避险通道", auto: false, owner: "安保组" }] },
+  { alert_type: "earthquake", alert_level: "yellow", mode: "evacuate", mode_label: "紧急疏散", actions: [{ text: "启动疏散预案", auto: true, owner: "AI" }] },
+  { alert_type: "earthquake", alert_level: "orange", mode: "evacuate", mode_label: "紧急疏散", actions: [{ text: "启动疏散预案", auto: true, owner: "AI" }] },
+  { alert_type: "earthquake", alert_level: "red", mode: "evacuate", mode_label: "紧急疏散", actions: [{ text: "启动疏散预案", auto: true, owner: "AI" }] },
+  { alert_type: "heat", alert_level: "warning", mode: "staggered", mode_label: "错峰放学", actions: [{ text: "减少户外活动", auto: true, owner: "AI" }] },
+  { alert_type: "air_pollution", alert_level: "warning", mode: "indoor", mode_label: "室内活动", actions: [{ text: "停止户外体育课", auto: true, owner: "AI" }, { text: "开启空气净化器", auto: true, owner: "AI" }] },
+];
+
+let _PLAN_CURRENT = { mode: "normal", mode_label: "正常运行", alert: null, plan: null };
+const _EVAC_ROUTES = {
+  routes: [
+    { from: "六年级1班", path: ["六年级1班", "楼梯", "东门集合地", "操场"], cost_m: 120 },
+    { from: "六年级2班", path: ["六年级2班", "楼梯", "东门集合地", "操场"], cost_m: 130 },
+    { from: "食堂", path: ["食堂", "南门", "兴华大街"], cost_m: 200 },
+  ],
+  hazard_zones: {}
+};
+
+const _SCENARIOS = [
+  { name: "dismissal_rainstorm", label: "暴雨放学场景", desc: "模拟暴雨预警触发错峰放学与积水风险联动" },
+  { name: "illness_cluster", label: "缺勤聚集场景", desc: "模拟同班3例发热触发缺勤聚集预警" },
+  { name: "food_safety", label: "食堂食安场景", desc: "模拟留样柜越限+后厨AI检测触发食安风险" },
+  { name: "earthquake", label: "地震疏散场景", desc: "模拟地震预警触发疏散预案启动" },
+];
+
+const _VENUE_REPUTATION = [
+  { resource_id: 1, name: "街道文体中心·篮球馆", category: "共享空间", avg_rating: 5, review_count: 1, warning: null },
+  { resource_id: 3, name: "社区卫生服务中心·健康小屋", category: "实践基地", avg_rating: null, review_count: 0, warning: null },
+  { resource_id: 4, name: "区图书馆·少儿分馆", category: "实践基地", avg_rating: 4, review_count: 1, warning: null },
+  { resource_id: 5, name: "消防救援站·科普教室", category: "实践基地", avg_rating: null, review_count: 0, warning: null },
+  { resource_id: 8, name: "科技园·青少年创客空间", category: "实践基地", avg_rating: 2, review_count: 1, warning: "平均评分2星，已标记为差评规避，建议不要安排整班前往" },
+];
+const _REVIEWS_BY_RESOURCE = {
+  1: [{ resource_id: 1, teacher_name: "李老师", rating: 5, comment: "场地宽敞、地胶新、有独立饮水区，带班体验很好，管理员配合疏导。", visit_date: "2026-06-12" }],
+  4: [{ resource_id: 4, teacher_name: "李老师", rating: 4, comment: "少儿区藏书丰富，建议提前预约集体阅览室，散客时段较吵。", visit_date: "2026-05-28" }],
+  8: [{ resource_id: 8, teacher_name: "赵校长", rating: 2, comment: "设备老旧且当天无讲解员，40人只有1名工作人员接待，安全看护压力大，不建议整班前往。", visit_date: "2026-05-13" }],
+};
+const _CANTEEN_SAMPLES = [
+  { id: 1, date: "2026-07-12", meal: "lunch", dish: "西红柿炒鸡蛋", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 2, date: "2026-07-12", meal: "lunch", dish: "土豆炖牛肉", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 3, date: "2026-07-12", meal: "lunch", dish: "二米饭", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 4, date: "2026-07-11", meal: "lunch", dish: "宫保鸡丁", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 5, date: "2026-07-11", meal: "lunch", dish: "清炒豆芽", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 6, date: "2026-07-11", meal: "lunch", dish: "红薯排骨", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 7, date: "2026-07-10", meal: "lunch", dish: "鱼香肉丝", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 8, date: "2026-07-10", meal: "lunch", dish: "番茄炒蛋", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+  { id: 9, date: "2026-07-10", meal: "lunch", dish: "玉米排骨", weight_g: 125, operator: "食堂·刘师傅", fridge_device_id: "iot-fridge-canteen-01" },
+];
+
+/* ============================================================
+   模拟路由分发函数
+   ============================================================ */
+function _mockRoute(path, opt) {
+  const method = (opt && opt.method) || "GET";
+  try {
+    const u = new URL(path, "http://x");
+    const p = u.pathname;
+
+    // Auth
+    if (p === "/api/auth/login" && method === "POST") { let b; try { b = JSON.parse(opt.body) } catch(e) { b = {} } return Promise.resolve(_SESSIONS[b.username || "admin"]); }
+    if (p === "/api/auth/accounts") return Promise.resolve(_ACCOUNTS);
+
+    // Children
+    if (/^\/api\/children\/by-parent\/\d+$/.test(p)) return Promise.resolve(_CHILDREN_BY_PARENT[3] || []);
+    if (/^\/api\/children\/\d+\/profile$/.test(p)) return Promise.resolve(_CHILD_PROFILE);
+    if (/^\/api\/children\/\d+\/interests$/.test(p) && method === "PUT") return Promise.resolve({ ok: true });
+    if (/^\/api\/children\/\d+\/external-classes$/.test(p) && method === "POST") return Promise.resolve({ ok: true });
+    if (/^\/api\/children\/\d+\/external-classes\/\d+$/.test(p) && method === "DELETE") return Promise.resolve({ ok: true });
+    if (/^\/api\/children\/\d+\/fitness-video$/.test(p) && method === "POST") return Promise.resolve({ message: "一分钟跳绳 85个，达标！", issues: [] });
+
+    // Courses
+    if (p === "/api/courses") {
+      return Promise.resolve(_COURSES.map(c => {
+        const m = { ...c }; m.reasons = []; m.tag = null; m.excluded = false; m.conflict = null;
+        if (c.id === 3) m.excluded = true;
+        if (c.id === 9) m.conflict = "已报名本课";
+        if (c.id === 1) { m.tag = "优先推荐"; m.reasons = ["体测弱项：跳绳成绩60分，需加强"]; }
+        if (c.id === 7) { m.tag = "探索推荐"; m.reasons = ["科学成绩优，拓展探索防茧房"]; }
+        if (c.id === 4) { m.tag = "优先推荐"; m.reasons = ["肺活量弱项，游泳提升肺活量", "馆校合作资源"]; }
+        return m;
+      }));
+    }
+    if (/^\/api\/courses\/enrollments\/\d+$/.test(p)) return Promise.resolve(_ENROLLMENTS);
+    if (/^\/api\/courses\/\d+\/enroll$/.test(p) && method === "POST") return Promise.resolve({ ok: true, reason_snapshot: "家长为孩子报名" });
+    if (/^\/api\/courses\/\d+\/cancel$/.test(p) && method === "POST") return Promise.resolve({ ok: true });
+
+    // Leave
+    if (p === "/api/leave" && method === "POST") return Promise.resolve({ ok: true, days: 1 });
+    if (/^\/api\/leave\/by-student\/\d+$/.test(p)) return Promise.resolve(_LEAVES);
+    if (p === "/api/leave/pending") return Promise.resolve(_PENDING_LEAVES);
+    if (/^\/api\/leave\/\d+\/approve$/.test(p) && method === "POST") return Promise.resolve({ ok: true });
+    if (p === "/api/leave/class-stats") return Promise.resolve(_CLASS_STATS);
+    if (p === "/api/leave/illness-watch") return Promise.resolve(_ILLNESS_WATCH);
+
+    // Meals
+    if (p === "/api/meals/plan" && method === "PUT") return Promise.resolve({ ok: true });
+    if (/^\/api\/meals\/plan\/\d+\/\d{4}-\d{2}$/.test(p)) return Promise.resolve({ days: _MEAL_DAYS, billed: false });
+    if (/^\/api\/meals\/bill\/\d+\/\d{4}-\d{2}$/.test(p)) return Promise.resolve(_MEAL_BILL);
+    if (p === "/api/meals/kitchen-forecast") return Promise.resolve(_KITCHEN_FORECAST);
+
+    // Notifications
+    if (/^\/api\/notifications\/inbox\/\d+$/.test(p)) return Promise.resolve(_NOTIFICATIONS);
+    if (/^\/api\/notifications\/\d+\/read\/\d+$/.test(p) && method === "POST") return Promise.resolve({ ok: true });
+
+    // Brain / hazards
+    if (p === "/api/brain/hazards") return Promise.resolve(_HAZARDS);
+    if (/^\/api\/brain\/hazards\/\d+\/advance$/.test(p) && method === "POST") {
+      const m = p.match(/\/(\d+)\//);
+      if (m) { const id = parseInt(m[1]); _HAZARDS = _HAZARDS.filter(h => h.id !== id); if (!_HAZARDS.length) _PLAN_CURRENT = { mode: "normal", mode_label: "正常运行", alert: null, plan: null }; }
+      return Promise.resolve({ ok: true });
+    }
+    if (p === "/api/brain/plan/current") return Promise.resolve(_PLAN_CURRENT);
+    if (p === "/api/brain/plan/reset" && method === "POST") { _PLAN_CURRENT = { mode: "normal", mode_label: "正常运行", alert: null, plan: null }; return Promise.resolve({ ok: true }); }
+    if (p === "/api/brain/plan/matrix") return Promise.resolve(_MATRIX);
+    if (p === "/api/brain/routes/evacuation") return Promise.resolve(_EVAC_ROUTES);
+    if (p === "/api/brain/routes/commute") return Promise.resolve(_COMMUTE);
+
+    // Perception
+    if (p === "/api/perception/devices") return Promise.resolve(_TELEMETRY);
+    if (p === "/api/perception/telemetry/latest") return Promise.resolve(_TELEMETRY);
+
+    // Incidents
+    if (p === "/api/incidents") {
+      if (method === "POST") return Promise.resolve({ ok: true, ticket_no: "INC-NEW", category: "facility", confidence: "0.91", assignee: "总务处·陈工" });
+      return Promise.resolve(_INCIDENTS);
+    }
+    if (p === "/api/incidents/stats") return Promise.resolve(_INCIDENT_STATS);
+    if (/^\/api\/incidents\/INC-[\w-]+\/status$/.test(p) && method === "PATCH") return Promise.resolve({ ok: true });
+
+    // Assets
+    if (p === "/api/assets") return Promise.resolve(_ASSETS);
+    if (p === "/api/assets-summary") return Promise.resolve(_ASSET_SUMMARY);
+    if (/^\/api\/assets\/[\w-]+\/report$/.test(p) && method === "POST") return Promise.resolve({ ok: true, ticket_no: "INC-NEW", assignee: "总务处·陈工" });
+
+    // Resources
+    if (p === "/api/resources") return Promise.resolve(_RESOURCES);
+    if (p === "/api/resources/parking") return Promise.resolve(_PARKING);
+    if (p === "/api/resources/emergency-map") return Promise.resolve(_EMERGENCY_MAP);
+    if (p === "/api/resources/bookings/list") return Promise.resolve(_BOOKINGS);
+    if (p === "/api/resources/bookings" && method === "POST") return Promise.resolve({ ok: true, booking_no: "BK-NEW-" + Date.now() });
+    if (/^\/api\/resources\/bookings\/[\w-]+\/status$/.test(p) && method === "PATCH") return Promise.resolve({ ok: true });
+
+    // Safety
+    if (p === "/api/safety/pickup") return Promise.resolve(_PICKUP);
+
+    // Canteen
+    if (p === "/api/canteen/board") return Promise.resolve(_CANTEEN_BOARD);
+    if (p === "/api/canteen/samples") return Promise.resolve(_CANTEEN_SAMPLES);
+
+    // Inspections
+    if (p === "/api/inspections") return Promise.resolve(_INSPECTIONS);
+    if (p === "/api/inspections/retirement-list") return Promise.resolve(_RETIREMENT_LIST);
+    if (p === "/api/inspections/desk-fit") return Promise.resolve(_DESK_FIT);
+
+    // Venue reviews
+    if (p === "/api/venue-reviews" && method === "POST") return Promise.resolve({ ok: true });
+    if (/^\/api\/venue-reviews\/\d+$/.test(p)) {
+      const m = p.match(/\/venue-reviews\/(\d+)/);
+      return Promise.resolve(_REVIEWS_BY_RESOURCE[m[1]] || []);
+    }
+    if (p === "/api/venue-reputation") return Promise.resolve(_VENUE_REPUTATION);
+
+    // Scenarios
+    if (p === "/api/scenario") return Promise.resolve(_SCENARIOS);
+    if (/^\/api\/scenario\//.test(p) && method === "POST") {
+      const name = p.replace("/api/scenario/", "");
+      let timeline = [];
+      if (name === "dismissal_rainstorm") {
+        _HAZARDS = [..._HAZARDS, {
+          id: 100, hazard_class: "waterlogging", zone: "东门下凹路段",
+          severity: 3, status: "active", created_at: "2026-07-12T08:05:00",
+          sources: [{ type: "scenario", detail: "场景注入：暴雨导致东门下凹路段积水" }],
+          inference: "场景注入：暴雨预警(orange) → 模式切换为错峰放学\n→ IoT水位计读数越限(15cm)\n→ 多模态交叉印证生成积水内涝风险(severity=3)",
+          suggestion: "启动错峰放学，通知家长改变接送时间"
+        }];
+        _PLAN_CURRENT = { mode: "staggered", mode_label: "错峰放学", alert: "暴雨预警(orange)", plan: "rainstorm-orange" };
+        timeline = ["接收暴雨预警(orange)", "IoT水位计触发越限", "多模态交叉印证确认积水风险", "自动切换为错峰放学模式", "推送通知至全体家长", "放学时段东门安排护学岗"];
+      } else if (name === "illness_cluster") {
+        _HAZARDS = [..._HAZARDS, {
+          id: 101, hazard_class: "illness_cluster", zone: "六年级1班",
+          severity: 3, status: "active", created_at: "2026-07-12T08:05:00",
+          sources: [{ type: "scenario", detail: "场景注入：同班3例发热触发缺勤聚集监测" }],
+          inference: "场景注入：请假台账症状标签聚合\n→ 3天内同班发热≥3例\n→ 触发缺勤聚集预警",
+          suggestion: "建议校医排查，通知家长关注"
+        }];
+        timeline = ["检测到同班3例发热请假", "触发缺勤聚集预警阈值(3例/3天)", "生成 illness_cluster 风险事件(severity=3)", "通知班主任和校医排查"];
+      } else if (name === "food_safety") {
+        _HAZARDS = [..._HAZARDS, {
+          id: 102, hazard_class: "food_safety", zone: "食堂后厨",
+          severity: 2, status: "active", created_at: "2026-07-12T08:05:00",
+          sources: [{ type: "iot", detail: "留样柜温度越限" }, { type: "vision", detail: "明厨亮灶AI检测到异常" }],
+          inference: "多模态交叉：IoT留样柜温度+视觉AI后厨异常\n→ 交叉印证食安风险(severity=2)",
+          suggestion: "建议暂停供餐，检查食材来源"
+        }];
+        timeline = ["留样柜温度传感器触发越限", "明厨亮灶AI检测到异常", "多模态交叉印证确认食安风险", "通知食堂主管暂停供餐"];
+      } else if (name === "earthquake") {
+        _PLAN_CURRENT = { mode: "evacuate", mode_label: "紧急疏散", alert: "地震预警(yellow)", plan: "earthquake-yellow" };
+        timeline = ["接收地震预警(yellow)", "自动启动疏散预案", "推送疏散路线至全校", "确认各班集合到位"];
+      } else {
+        timeline = ["场景 " + name + " 已注入"];
+      }
+      return Promise.resolve({ ok: true, timeline });
+    }
+
+    // Chat
+    if (p === "/api/chat" && method === "POST") {
+      let body = {}; try { body = JSON.parse(opt.body) } catch(e) {}
+      const msg = (body.message || "").toLowerCase();
+      let intent = "fallback", reply = "抱歉，我暂时无法理解您的问题。您可以试试问我关于风险预警、预案模式、孩子健康、选修课、请假等方面的问题。", data = null;
+      if (/风险|预警/.test(msg)) { intent = "query_hazard"; reply = "当前校园风险情况如下："; data = _HAZARDS; }
+      else if (/预案|模式/.test(msg)) { intent = "query_plan"; reply = "当前运行模式信息："; data = _PLAN_CURRENT; }
+      else if (/健康|体检/.test(msg)) { intent = "query_health"; reply = "孩子空间·健康档案已调出，小明连续两学期视力下滑（左4.8/右4.9），BMI偏高（超重），跳绳和肺活量为体测弱项。已生成锻炼处方和营养建议，可在「孩子空间」查看详情。"; }
+      else if (/选修|选课/.test(msg)) { intent = "query_course"; reply = "选修课推荐基于六大因子：体测弱项/健康趋势/成绩扬长补短/兴趣/校外班排除/时段冲突。当前推荐：花样跳绳（优先推荐，针对跳绳弱项）、游泳启蒙（优先推荐，针对肺活量）、科学实验站（探索推荐）。校园篮球因校外已学排除。"; }
+      else if (/请假/.test(msg)) { intent = "ask_leave"; reply = "您可以为小明提交请假申请：病假需填写症状（用于聚集监测，脱敏聚合），事假只需备注。班主任审批通过后，系统会自动联动用餐日历。前往「请假」页面操作。"; }
+      return Promise.resolve({ intent, reply, data });
+    }
+
+    // Fallback
+    console.warn("[MOCK] Unhandled API:", p, method);
+    return Promise.resolve({ ok: true });
+  } catch (e) {
+    console.warn("[MOCK] Error parsing path:", path, e.message);
+    return Promise.resolve({ ok: true });
+  }
+}
+
+/* ============================================================
+   红门哨兵 v5 · 核心层：会话 / 导航 / 通用 UI 工厂 / 图表 / 对话
+   组件样式来自 TDesign（本地 vendor），图标 Remix Icon，图表 ECharts
+   v5 增强：骨架屏 / 粒子背景 / 数字动画 / 过渡动效 / 新增 UI 工厂
+   ============================================================ */
+const API = "";
+let SESSION = null;
+let CHILD = null;   // 家长登录后加载的孩子档案（一人一档不一人一号）
+
+/* ---------------- 角色导航（4账号，无学生账号）----------------
+   admin：资产台账归口校长（安全第一责任人），教师端不出现
+   parent：孩子空间内嵌 → 健康/体测/成绩/选修课/请假/用餐全在家长账号下
+   community：资源方只审批预约、处置工单，不发起预约 */
+const ROLE_NAV = {
+  admin: [["dashboard", "指挥大屏"], ["matrix", "预案矩阵"], ["workbench", "工单管理"], ["assets", "资产管理"], ["inspections", "年检公示"], ["spaces", "共享空间"]],
+  teacher: [["inbox", "通知中心"], ["leaveadmin", "请假·缺勤"], ["spaces", "共享空间"], ["venues", "场馆点评"], ["inspections", "安全公示"], ["report", "随手拍"]],
+  parent: [["child", "孩子空间"], ["courses", "选修课"], ["leave", "请假"], ["meals", "用餐日历"], ["inbox", "通知中心"], ["travel", "安全出行"], ["canteen", "食安公示"], ["report", "随手拍"]],
+  community: [["workbench", "工单处置台"], ["hazards", "风险事件"], ["approvals", "预约审批"]],
+};
+const NAV_ICON = {
+  dashboard: "ri-dashboard-3-line", matrix: "ri-list-settings-line", workbench: "ri-todo-line",
+  assets: "ri-archive-drawer-line", inspections: "ri-shield-check-line", spaces: "ri-building-2-line",
+  inbox: "ri-notification-3-line", leaveadmin: "ri-calendar-check-line", venues: "ri-star-smile-line",
+  report: "ri-camera-line", child: "ri-user-heart-line", courses: "ri-book-open-line",
+  leave: "ri-calendar-event-line", meals: "ri-restaurant-line", travel: "ri-walk-line",
+  canteen: "ri-restaurant-2-line", hazards: "ri-alarm-warning-line", approvals: "ri-checkbox-multiple-line",
+};
+const CHAT_HINT = {
+  parent: "您好！可以问我：孩子健康档案？选修课推荐？怎么请假？这个月饭费？现在有风险吗？",
+  teacher: "您好！可以问我：当前预案？班里请假情况？预约场地？食堂留样？",
+  community: "您好！可以问我：现在有什么风险？工单进度？",
+  admin: "您好！可以问我：现在有什么风险？当前预案？食安指数？资产状况？",
+};
+
+/* ---------------- 通用 ---------------- */
+async function api(path, opt) { return _mockRoute(path, opt); }
+function h(html) { const d = document.createElement("div"); d.innerHTML = html; return d }
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) }
+function fmt(t) { return t ? new Date(t).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—" }
+const SEV = ["", "提示", "一般", "严重", "紧急"], SEVT = ["", "default", "primary", "warning", "danger"];
+const HZL = { waterlogging: "积水内涝", typhoon_wind: "大风/台风", earthquake: "地震", food_safety: "食堂食安", air_quality: "教室空气", gate_congestion: "校门拥堵", illegal_parking: "违停", fire_channel_blocked: "消防通道占用", noise: "噪音", illness_cluster: "缺勤聚集(症状监测)", stair_crowding: "楼梯间拥挤" };
+const HZI = { waterlogging: "ri-flood-line", typhoon_wind: "ri-windy-line", earthquake: "ri-earthquake-line", food_safety: "ri-restaurant-2-line", air_quality: "ri-haze-2-line", gate_congestion: "ri-group-line", illegal_parking: "ri-car-line", fire_channel_blocked: "ri-fire-line", noise: "ri-sound-module-line", illness_cluster: "ri-virus-line", stair_crowding: "ri-run-line" };
+const STL = { reported: "已上报", dispatched: "已派单", processing: "处理中", resolved: "已解决", closed: "已归档" };
+const CATL = { traffic: "交通", vendor: "游商", fire_hazard: "消防", environment: "环境", facility: "设施", food: "食安", air: "空气", flood: "积水", other: "其他" };
+const BKL = { pending: "待审批", confirmed: "已批准", cancelled: "已取消/驳回", completed: "已完成" };
+const WD = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+const LVT = { sick: "病假", personal: "事假" };
+function curMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` }
+function isDark() { return document.body.classList.contains("dark") }
+
+/* ==================== v5 新增：粒子背景动画 ==================== */
+/* 粒子系统：在登录页绘制缓慢移动的粒子连线效果 */
+let _particlesRAF = null;
+let _particlesCtx = null;
+let _particles = [];
+
+function initParticles() {
+  const canvas = document.createElement("canvas");
+  canvas.id = "particles";
+  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0";
+  const loginView = document.getElementById("login-view");
+  if (loginView) {
+    loginView.style.position = "relative";
+    loginView.style.overflow = "hidden";
+    loginView.insertBefore(canvas, loginView.firstChild);
+  }
+  const ctx = canvas.getContext("2d");
+  _particlesCtx = ctx;
+  /* 初始化50个粒子 */
+  _particles = [];
+  function resize() {
+    canvas.width = loginView ? loginView.offsetWidth : window.innerWidth;
+    canvas.height = loginView ? loginView.offsetHeight : window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+  for (let i = 0; i < 50; i++) {
+    _particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      r: Math.random() * 2 + 1,
+      alpha: Math.random() * 0.4 + 0.1
+    });
+  }
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    /* 绘制连线 */
+    for (let i = 0; i < _particles.length; i++) {
+      for (let j = i + 1; j < _particles.length; j++) {
+        const dx = _particles[i].x - _particles[j].x;
+        const dy = _particles[i].y - _particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          const alpha = (1 - dist / 150) * 0.15;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(40, 209, 232, ${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(_particles[i].x, _particles[i].y);
+          ctx.lineTo(_particles[j].x, _particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    /* 绘制粒子 */
+    _particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, p.r), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(40, 209, 232, ${p.alpha})`;
+      ctx.fill();
+      /* 移动粒子 */
+      p.x += p.vx;
+      p.y += p.vy;
+      /* 边界回弹 */
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    });
+    _particlesRAF = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* 停止粒子动画（登录成功后调用） */
+function stopParticles() {
+  if (_particlesRAF) {
+    cancelAnimationFrame(_particlesRAF);
+    _particlesRAF = null;
+  }
+  const canvas = document.getElementById("particles");
+  if (canvas) canvas.remove();
+  _particles = [];
+  _particlesCtx = null;
+}
+
+/* ==================== v5 新增：数字滚动动画 ==================== */
+/* 从 0 滚动到目标值，easeOutExpo 缓动 */
+function animateNumber(el, target, duration) {
+  duration = duration || 800;
+  /* 提取目标数值（支持带标签的HTML，取纯数字部分） */
+  const targetStr = String(target);
+  /* 如果包含 < 标签HTML，直接设置，不做动画 */
+  if (targetStr.includes("<")) {
+    if (el) el.innerHTML = targetStr;
+    return;
+  }
+  const targetNum = parseFloat(targetStr);
+  if (isNaN(targetNum)) {
+    if (el) el.textContent = targetStr;
+    return;
+  }
+  const isDecimal = targetStr.includes(".");
+  const decimals = isDecimal ? (targetStr.split(".")[1] || "").length : 0;
+  const start = performance.now();
+  /* easeOutExpo 缓动函数 */
+  function easeOutExpo(t) {
+    return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  }
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeOutExpo(progress);
+    const current = easedProgress * targetNum;
+    el.textContent = current.toFixed(decimals);
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = targetStr;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ==================== v5 新增：内联样式注入（用于过渡动画） ==================== */
+/* 注入 core.js 所需的动画关键帧和过渡类，不依赖外部 CSS */
+function _injectCoreStyles() {
+  if (document.getElementById("_core-v5-styles")) return;
+  const style = document.createElement("style");
+  style.id = "_core-v5-styles";
+  style.textContent = `
+    /* 登录加载骨架屏 */
+    .login-skl { border-radius:12px; height:56px; margin-bottom:10px;
+      background:linear-gradient(100deg,rgba(255,255,255,.04) 40%,rgba(122,168,255,.1) 50%,rgba(255,255,255,.04) 60%);
+      background-size:200% 100%; animation:shimmer 1.2s infinite linear;
+      border:1px solid rgba(122,168,255,.12); }
+    /* 账号卡片 fadein 入场 */
+    .acct-fadein { opacity:0; transform:translateY(8px); animation:acctFadeIn .35s ease forwards; }
+    @keyframes acctFadeIn { to { opacity:1; transform:none; } }
+    /* 全屏 loading 遮罩 */
+    .login-loading { position:fixed; inset:0; z-index:200; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:16px;
+      background:radial-gradient(1200px 700px at 20% 0%,#14498f 0%,#0d2a52 45%,#081226 100%);
+      color:#eaf2ff; transition:opacity .4s ease; }
+    .login-loading.fade-out { opacity:0; pointer-events:none; }
+    .login-loading .spinner { width:36px; height:36px; border:3px solid rgba(40,209,232,.2);
+      border-top-color:#28d1e8; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .login-loading .load-text { font-size:14px; color:#9db8dd; letter-spacing:1px; }
+    /* 页面切换过渡 */
+    #main.page-fade-out { opacity:0; transform:translateY(-10px); transition:all .2s ease; }
+    #main.page-fade-in { opacity:0; transform:translateX(20px); animation:pageSlideIn .3s ease forwards; }
+    @keyframes pageSlideIn { to { opacity:1; transform:none; } }
+    /* 导航按钮入场 */
+    .nav-fadein { opacity:0; animation:navFadeIn .25s ease forwards; }
+    @keyframes navFadeIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+    /* 面板进入动画 */
+    .panel-enter { animation:panelEnter .4s cubic-bezier(.23,1,.32,1); }
+    @keyframes panelEnter { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+    /* 空态图标微浮动 */
+    .empty i { animation:emptyFloat 2.5s ease-in-out infinite; }
+    @keyframes emptyFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+    /* 星星逐个亮起 */
+    .star-animate { opacity:0; animation:starLightUp .3s ease forwards; }
+    @keyframes starLightUp { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
+    /* toast 入场退场动画 */
+    .toast { animation:toastSlideDown .25s ease, toastFadeOut .3s ease 2.8s forwards; }
+    @keyframes toastSlideDown { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+    @keyframes toastFadeOut { to { opacity:0; transform:translateX(-50%) translateY(-8px); } }
+    /* 聊天面板弹出动画 */
+    .chat-panel.chat-enter { animation:chatPopIn .3s cubic-bezier(.23,1,.32,1); }
+    @keyframes chatPopIn { from { opacity:0; transform:scale(.92) translateY(10px); } to { opacity:1; transform:none; } }
+    /* 打字指示器 */
+    .typing-indicator { display:flex; gap:4px; padding:10px 14px; align-items:center;
+      background:var(--bg-page); border-radius:0 10px 10px 0; border-left:3px solid var(--brand);
+      align-self:flex-start; }
+    .typing-indicator .dot { width:6px; height:6px; border-radius:50%;
+      background:var(--ink-3); animation:typingBounce .6s ease infinite; }
+    .typing-indicator .dot:nth-child(2) { animation-delay:.15s; }
+    .typing-indicator .dot:nth-child(3) { animation-delay:.3s; }
+    @keyframes typingBounce { 0%,100% { transform:translateY(0); opacity:.4; } 50% { transform:translateY(-4px); opacity:1; } }
+    /* 消息时间戳 */
+    .msg-time { font-size:10px; color:var(--ink-3); margin-top:3px; opacity:.7; }
+    .msg.me .msg-time { text-align:right; color:rgba(255,255,255,.6); }
+    /* 导航 active 底部横线过渡 */
+    .app-nav button::after { content:""; position:absolute; bottom:-1px; left:50%; width:0; height:2.5px;
+      background:var(--brand); border-radius:2px; transition:width .25s ease, left .25s ease; }
+    .app-nav button { position:relative; }
+    .app-nav button.active::after { width:calc(100% - 28px); left:14px; }
+    /* 应急横幅 */
+    .emergency-banner { padding:8px 16px; text-align:center; font-size:13px; color:#fff;
+      background:linear-gradient(90deg,#d54941,#e37318,#d54941); background-size:200% 100%;
+      animation:emergencyBannerGradient 3s ease infinite; position:relative; z-index:48;
+      box-shadow:0 2px 12px rgba(213,73,65,.3); }
+    @keyframes emergencyBannerGradient { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+    .emergency-banner i { margin-right:6px; }
+    /* 应急模式 header 闪烁边框 */
+    .app-header.emergency-border { animation:headerBorderPulse 1.5s ease infinite; }
+    @keyframes headerBorderPulse { 0%,100%{box-shadow:0 0 0 0 rgba(213,73,65,0);} 50%{box-shadow:0 0 0 2px rgba(213,73,65,.5), 0 2px 16px rgba(213,73,65,.2);} }
+    /* 骨架屏计数动画 */
+    .skl-count { position:absolute; bottom:8px; right:12px; font-size:11px; color:var(--ink-3);
+      animation:sklCountPulse 1s ease infinite; }
+    @keyframes sklCountPulse { 0%,100%{opacity:.4;} 50%{opacity:.9;} }
+    .skl { position:relative; }
+    /* btn ripple 效果（CSS-only via ::after） */
+    .btn-ripple { position:relative; overflow:hidden; }
+    .btn-ripple::after { content:""; position:absolute; inset:0;
+      background:radial-gradient(circle at var(--ripple-x,50%) var(--ripple-y,50%), rgba(255,255,255,.25) 0%, transparent 60%);
+      opacity:0; transition:opacity .4s ease; pointer-events:none; }
+    .btn-ripple:active::after { opacity:1; transition:opacity 0s; }
+    /* hero-stat 额外样式 */
+    .hero-stat { border-radius:var(--r-lg); background:var(--bg-card); border:1px solid var(--line);
+      box-shadow:var(--shadow-1); transition:transform .2s ease, box-shadow .2s ease; }
+    .hero-stat:hover { transform:translateY(-2px); box-shadow:var(--shadow-2); }
+    .hero-stat .hero-icon { font-size:28px; margin-bottom:8px; }
+    /* 进度条组件 */
+    .progress-bar-wrap { margin:4px 0; }
+    .progress-bar-label { display:flex; justify-content:space-between; align-items:center;
+      font-size:var(--fs-xs); color:var(--ink-2); margin-bottom:4px; }
+    .progress-bar-track { height:8px; border-radius:4px; background:var(--line); overflow:hidden; }
+    .progress-bar-fill { height:100%; border-radius:4px; transition:width .8s cubic-bezier(.23,1,.32,1); }
+    /* 应用 view crossfade */
+    #app-view.crossfade-enter { animation:crossfadeIn .5s ease; }
+    @keyframes crossfadeIn { from { opacity:0; } to { opacity:1; } }
+  `;
+  document.head.appendChild(style);
+}
+/* 自动注入样式 */
+_injectCoreStyles();
+
+/* ---------------- UI 工厂：统一 TDesign 视觉件（v5 增强版） ---------------- */
+function tag(text, theme, icon) {   // theme: primary/success/warning/danger/default/purple
+  /* v5: pill 圆角 + icon 文字间距微调 */
+  return `<span class="t-tag t-tag--${theme || "default"} t-tag--light" style="border-radius:999px">${icon ? `<i class="${icon}" style="margin-right:3px"></i>` : ""}${esc(text)}</span>`;
+}
+function btn(label, onclick, opt) { // opt: {theme:"primary|danger|default", variant:"base|outline|text", icon, size}
+  const o = opt || {};
+  /* v5: 加 ripple 类 + hover 过渡动效 */
+  const btnStyle = `transition:transform .15s ease,box-shadow .15s ease;cursor:pointer;`;
+  const hoverCode = `onmouseenter="this.style.transform='scale(1.02)'" onmouseleave="this.style.transform='scale(1)'"`;
+  return `<button class="t-button t-button--theme-${o.theme || "primary"} t-button--variant-${o.variant || "base"} t-size-${o.size || "s"} btn-ripple" style="${btnStyle}" onclick="${onclick}" ${hoverCode}>` +
+    `${o.icon ? `<i class="${o.icon}" style="margin-right:4px"></i>` : ""}<span class="t-button__text">${label}</span></button>`;
+}
+function panel(icon, title, desc, body, extra) {
+  /* v5: 增加面板进入动画类名 */
+  return `<div class="panel panel-enter"><div class="panel-hd"><i class="${icon}"></i><h3>${title}</h3>` +
+    `${desc ? `<span class="panel-desc">${desc}</span>` : ""}${extra ? `<span class="extra">${extra}</span>` : ""}</div>` +
+    `<div class="panel-bd">${body}</div></div>`;
+}
+function kpi(icon, num, label, mood) {  // mood: good/warn/bad/""
+  /* v5: 先显示 0，通过 data-target 实现数字动画 */
+  const targetVal = String(num);
+  return `<div class="kpi ${mood || ""}"><div class="ic"><i class="${icon}"></i></div>` +
+    `<div><div class="num" data-countup="${esc(targetVal)}">0</div><div class="lbl">${label}</div></div></div>`;
+}
+function empty(icon, text) {
+  /* v5: 图标加微浮动（通过注入的 CSS 动画类） */
+  return `<div class="empty"><i class="${icon || "ri-inbox-line"}"></i><p>${esc(text || "暂无数据")}</p></div>`;
+}
+function rateStars(n) {
+  let s = "";
+  /* v5: 星星加逐个亮起的延迟动画 */
+  for (let i = 1; i <= 5; i++) {
+    const filled = i <= Math.round(n);
+    const delay = i * 80;
+    s += `<i class="ri-star-fill star-animate" style="color:${filled ? "#e8a52e" : "var(--line)"};font-size:14px;animation-delay:${delay}ms;opacity:${filled ? "1" : "0.4"}"></i>`;
+  }
+  return `<span style="letter-spacing:1px">${s}</span>`;
+}
+function toast(text, kind) {
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const ic = kind === "error" ? "ri-close-circle-line" : "ri-checkbox-circle-line";
+  const t = h(`<div class="toast ${kind || "success"}"><i class="${ic}"></i><span>${esc(text)}</span></div>`).firstChild;
+  document.body.appendChild(t);
+  /* v5: 退场由 CSS 动画处理（2.8s 后 fadeOut），3.2s 后移除 DOM */
+  setTimeout(() => t.remove(), 3200);
+}
+
+/* ---------------- v5 新增 UI 工厂函数 ---------------- */
+
+/* 大数据展示卡（.hero-stat） */
+function heroStat(icon, num, label, desc, mood) {
+  return `<div class="hero-stat">
+    <div class="hero-icon" style="color:var(--brand)">${icon ? `<i class="${icon}"></i>` : ""}</div>
+    <div class="hero-num" data-countup="${esc(String(num))}">0</div>
+    <div class="hero-lbl">${label || ""}</div>
+    ${desc ? `<div class="hero-sub">${desc}</div>` : ""}</div>`;
+}
+
+/* 紧凑指标卡（.stat-card） */
+function statCard(icon, num, label, desc, mood) {
+  return `<div class="stat-card">
+    <div class="stat-val" data-countup="${esc(String(num))}" style="color:${mood === "good" ? "#2ba471" : mood === "bad" ? "#d54941" : mood === "warn" ? "#e37318" : "var(--ink)"}">0</div>
+    <div class="stat-lbl">${label || ""}</div>
+    ${desc ? `<div class="stat-lbl" style="color:var(--ink-3);font-size:11px">${desc}</div>` : ""}</div>`;
+}
+
+/* 渐变分割线 */
+function divider(text) {
+  return `<div class="divider">${esc(text || "")}</div>`;
+}
+
+/* 状态点 */
+function statusDot(status, text) {
+  return `<span class="status-dot ${status || ""}">${esc(text || "")}</span>`;
+}
+
+/* 指标行，items=[{icon,num,label}] */
+function metricRow(items) {
+  return `<div class="metric-row">${(items || []).map(it =>
+    `<div class="metric-item">
+      ${it.icon ? `<i class="${it.icon}" style="font-size:14px;color:var(--brand);margin-bottom:2px"></i>` : ""}
+      <div class="metric-val" data-countup="${esc(String(it.num || 0))}">0</div>
+      <div class="metric-lbl">${esc(it.label || "")}</div>
+    </div>`
+  ).join("")}</div>`;
+}
+
+/* 数字徽标 */
+function badge(count, type) {
+  return `<span class="badge ${type || ""}">${count}</span>`;
+}
+
+/* 进度条 */
+function progressBar(pct, color, label) {
+  const p = Math.min(100, Math.max(0, Number(pct) || 0));
+  const c = color || "var(--brand)";
+  return `<div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>${esc(label || "")}</span><span>${p}%</span></div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${p}%;background:${c}"></div></div></div>`;
+}
+
+/* ---------------- ECharts：挂载队列 + 主题基色 ---------------- */
+const _mountQueue = [];
+function mount(fn) { _mountQueue.push(fn) }
+function flushMount() {
+  /* v5: flushMount 时触发所有 data-countup 数字动画 */
+  document.querySelectorAll("[data-countup]").forEach(el => {
+    const target = el.getAttribute("data-countup");
+    if (target) animateNumber(el, target, 800);
+  });
+  /* 执行挂载队列 */
+  while (_mountQueue.length) { try { _mountQueue.shift()() } catch (e) { console.warn(e) } }
+}
+function chart(el, option, height) {
+  el.style.height = (height || 220) + "px";
+  const c = echarts.init(el, null, { renderer: "canvas" });
+  const dk = isDark();
+  option.textStyle = { fontFamily: "PingFang SC, Microsoft YaHei, sans-serif", color: dk ? "#8fa9d6" : "#5f6b82" };
+  if (option.xAxis) [].concat(option.xAxis).forEach(a => { a.axisLine = a.axisLine || { lineStyle: { color: dk ? "#22406e" : "#dcdcdc" } }; a.axisLabel = Object.assign({ color: dk ? "#8fa9d6" : "#7d8ba5", fontSize: 11 }, a.axisLabel) });
+  if (option.yAxis) [].concat(option.yAxis).forEach(a => { a.splitLine = a.splitLine || { lineStyle: { color: dk ? "#16294f" : "#eef1f6" } }; a.axisLabel = Object.assign({ color: dk ? "#8fa9d6" : "#7d8ba5", fontSize: 11 }, a.axisLabel) });
+  /* v5: 支持渐变色 series itemStyle gradient 对象 */
+  if (option.series) [].concat(option.series).forEach(s => {
+    /* 如果 itemStyle.color 是 {gradient} 对象，转换为 ECharts 渐变 */
+    if (s.itemStyle && s.itemStyle.color && typeof s.itemStyle.color === "object" && s.itemStyle.color.gradient) {
+      const g = s.itemStyle.color.gradient;
+      const grad = new echarts.graphic.LinearGradient(g.direction || 0, g.x1 || 0, g.y1 || 0, g.x2 || 0, g.y2 || 1,
+        (g.stops || []).map(st => ({ offset: st.offset || 0, color: st.color })));
+      s.itemStyle.color = grad;
+    }
+    /* v5: 支持 animationDelay 回调 */
+    if (s.animationDelay && typeof s.animationDelay === "function") {
+      option.animationDelay = s.animationDelay;
+      delete s.animationDelay;
+    }
+  });
+  /* v5: 如果 option 中传入了 _theme，应用主题配置 */
+  if (option._theme) {
+    const theme = option._theme;
+    if (theme.tooltip) option.tooltip = Object.assign(option.tooltip || {}, theme.tooltip);
+    if (theme.legend) option.legend = Object.assign(option.legend || {}, theme.legend);
+    delete option._theme;
+  }
+  c.setOption(option);
+  window.addEventListener("resize", () => c.resize());
+  return c;
+}
+
+/* v5: chartTheme() 返回深色/浅色完整主题对象 */
+function chartTheme(mode) {
+  const dk = mode === "dark" || isDark();
+  return dk ? {
+    tooltip: { backgroundColor: "rgba(14,28,60,0.9)", borderColor: "rgba(40,209,232,0.2)", textStyle: { color: "#dbe7ff", fontSize: 12 } },
+    legend: { textStyle: { color: "#8fa9d6", fontSize: 11 } }
+  } : {
+    tooltip: { backgroundColor: "#fff", borderColor: "#dcdcdc", textStyle: { color: "rgba(0,0,0,.9)", fontSize: 12 } },
+    legend: { textStyle: { color: "#5f6b82", fontSize: 11 } }
+  };
+}
+
+const C_BLUE = "#0052d9", C_CYAN = "#0fa8bd", C_ORANGE = "#e37318", C_RED = "#d54941", C_GREEN = "#2ba471";
+
+/* ---------------- 登录：点选身份进入，不展示口令（v5 增强版） ---------------- */
+async function initLogin() {
+  /* 启动粒子背景 */
+  initParticles();
+  const p = document.getElementById("quick-panel");
+  /* v5: 先显示骨架屏（3个闪烁卡片） */
+  p.innerHTML = `<div class="login-skl"></div><div class="login-skl"></div><div class="login-skl"></div>`;
+  try {
+    const list = await api("/api/auth/accounts");
+    const meta = {
+      admin: ["ri-government-line", "linear-gradient(135deg,#d54941,#e37318)"],
+      teacher: ["ri-user-star-line", "linear-gradient(135deg,#0052d9,#4d9fff)"],
+      parent: ["ri-parent-line", "linear-gradient(135deg,#0fa8bd,#2ba471)"],
+      community: ["ri-community-line", "linear-gradient(135deg,#7b46d1,#a678f0)"],
+    };
+    /* v5: 清空骨架屏，逐个 fadein 账号卡片 */
+    p.innerHTML = "";
+    list.forEach((a, idx) => {
+      const [ic, bg] = meta[a.role] || ["ri-user-line", "#1a66cc"];
+      const acctEl = h(`<div class="acct acct-fadein" onclick="quickLogin('${a.username}')" style="animation-delay:${idx * 150}ms">
+        <div class="av" style="background:${bg}"><i class="${ic}"></i></div>
+        <div class="nm"><b>${esc(a.name)}</b><div class="meta">${esc(a.role_label || a.role)}</div></div>
+        <i class="ri-arrow-right-s-line go"></i></div>`).firstChild;
+      p.appendChild(acctEl);
+    });
+  } catch (e) { document.getElementById("li-err").textContent = "服务未就绪：" + e.message }
+}
+async function quickLogin(u) {
+  /* v5: 显示全屏 loading 动画（旋转 + 提示文字） */
+  const loading = document.createElement("div");
+  loading.className = "login-loading";
+  loading.innerHTML = `<div class="spinner"></div><div class="load-text">正在进入系统...</div>`;
+  document.body.appendChild(loading);
+  try {
+    SESSION = await api("/api/auth/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: u, password: "123456" })
+    });
+    /* 停止粒子动画 */
+    stopParticles();
+    /* v5: crossfade 过渡：先让 loading 淡出 */
+    loading.classList.add("fade-out");
+    /* 同时准备 app-view */
+    document.getElementById("login-view").style.display = "none";
+    const av = document.getElementById("app-view"); av.classList.remove("hidden");
+    av.classList.add("crossfade-enter");
+    av.style.display = "";
+    /* 等待 loading 淡出动画完成后再移除 */
+    setTimeout(() => {
+      loading.remove();
+      av.classList.remove("crossfade-enter");
+    }, 400);
+    /* 校长端 = 城运中心深色大屏：body.dark（自有令牌） + theme-mode（TDesign 暗色变量） */
+    const dark = SESSION.role === "admin";
+    document.body.classList.toggle("dark", dark);
+    document.documentElement.setAttribute("theme-mode", dark ? "dark" : "");
+    const roleLabel = { admin: "校长·安全第一责任人", parent: "家长", teacher: "班主任", community: "社区·红门管家" }[SESSION.role] || SESSION.role;
+    document.getElementById("who").innerHTML = `<i class="ri-user-follow-line"></i> ${esc(SESSION.name)} · ${roleLabel}`;
+    document.getElementById("chat-msgs").innerHTML = `<div class="msg bot">${esc(CHAT_HINT[SESSION.role] || CHAT_HINT.parent)}</div>`;
+    if (SESSION.role === "parent") {
+      const kids = await api(`/api/children/by-parent/${SESSION.user_id}`);
+      CHILD = kids[0] || null;
+    }
+    buildNav(); refreshMode(); setInterval(refreshMode, 8000);
+  } catch (e) {
+    loading.remove();
+    document.getElementById("li-err").textContent = e.message;
+  }
+}
+function logout() { document.body.classList.remove("dark"); document.documentElement.removeAttribute("theme-mode"); location.reload() }
+function buildNav() {
+  const nav = document.getElementById("nav"); nav.innerHTML = "";
+  const items = ROLE_NAV[SESSION.role] || ROLE_NAV.parent;
+  items.forEach(([k, label], i) => {
+    const b = document.createElement("button");
+    b.innerHTML = `<i class="${NAV_ICON[k] || "ri-apps-line"}"></i>${label}`;
+    b.dataset.page = k; b.onclick = () => go(k);
+    /* v5: 导航按钮逐个 fadein 出现 */
+    b.classList.add("nav-fadein");
+    b.style.animationDelay = `${i * 100}ms`;
+    nav.appendChild(b);
+    /* v5: 第一个自动激活动画从左到右滑入（已通过 nav-fadein 实现） */
+    if (i === 0) go(k);
+  });
+}
+function go(page) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  const m = document.getElementById("main");
+  /* v5: 当前内容 fadeOut（opacity 0, translateY -10px） */
+  m.classList.add("page-fade-out");
+  /* v5: 骨架屏加计数动画（模拟数据加载感） */
+  setTimeout(() => {
+    m.classList.remove("page-fade-out");
+    m.innerHTML = `<div class="skl" style="height:96px"><span class="skl-count">加载中 0%</span></div><div class="skl" style="height:220px"><span class="skl-count">加载中 0%</span></div><div class="skl" style="height:160px"><span class="skl-count">加载中 0%</span></div>`;
+    /* 骨架屏计数动画：模拟加载进度 */
+    const counters = m.querySelectorAll(".skl-count");
+    let progress = 0;
+    const countInterval = setInterval(() => {
+      progress = Math.min(progress + Math.floor(Math.random() * 20 + 5), 95);
+      counters.forEach(c => { c.textContent = `加载中 ${progress}%`; });
+    }, 200);
+    m.classList.add("page-fade-in");
+    PAGES[page]().then(el => {
+      clearInterval(countInterval);
+      m.classList.remove("page-fade-in");
+      m.innerHTML = "";
+      m.appendChild(el);
+      flushMount();
+    }).catch(e => {
+      clearInterval(countInterval);
+      m.classList.remove("page-fade-in");
+      m.innerHTML = `<div class="page-err"><i class="ri-alert-line"></i> 加载失败：${esc(e.message)}</div>`;
+    });
+  }, 200);
+}
+async function refreshMode() {
+  try {
+    const cur = await api("/api/brain/plan/current");
+    const pill = document.getElementById("mode-pill");
+    let theme = "success", icon = "ri-checkbox-circle-line", blink = "";
+    if (cur.mode === "staggered") { theme = "warning"; icon = "ri-timer-flash-line" }
+    if (["indoor", "home_study", "evacuate"].includes(cur.mode)) { theme = "danger"; icon = "ri-alarm-warning-line"; blink = " blink" }
+    pill.className = `t-tag t-tag--${theme} t-tag--dark${blink}`;
+    pill.innerHTML = `<i class="${icon}"></i> ${esc(cur.mode_label)}`;
+
+    /* v5: 应急模式视觉增强 */
+    const header = document.querySelector(".app-header");
+    const isEmergency = ["indoor", "home_study", "evacuate"].includes(cur.mode);
+    /* 应急闪烁边框 */
+    header.classList.toggle("emergency-border", isEmergency);
+    /* 应急横幅 */
+    let banner = document.querySelector(".emergency-banner");
+    if (isEmergency) {
+      if (!banner) {
+        banner = document.createElement("div");
+        banner.className = "emergency-banner";
+        document.querySelector(".app-nav").after(banner);
+      }
+      banner.innerHTML = `<i class="ri-alarm-warning-line"></i> 应急模式：${esc(cur.mode_label)} —— 请关注最新通知，按预案行动`;
+      banner.style.display = "";
+    } else if (banner) {
+      banner.style.display = "none";
+    }
+  } catch (e) { }
+}
+
+/* ---------------- 对话（v5 增强版） ---------------- */
+let _chatOpen = false;
+function toggleChat() {
+  const p = document.getElementById("chat-panel");
+  if (!_chatOpen) {
+    p.style.display = "";
+    /* v5: 面板展开 slide + scale 动画 */
+    p.classList.remove("chat-enter");
+    void p.offsetWidth; /* 触发 reflow */
+    p.classList.add("chat-enter");
+    _chatOpen = true;
+  } else {
+    /* v5: 面板收起：先加淡出再隐藏 */
+    p.style.opacity = "0";
+    p.style.transform = "scale(.92) translateY(10px)";
+    p.style.transition = "all .2s ease";
+    setTimeout(() => {
+      p.style.display = "none";
+      p.style.opacity = ""; p.style.transform = ""; p.style.transition = "";
+      p.classList.remove("chat-enter");
+    }, 200);
+    _chatOpen = false;
+  }
+}
+async function sendChat() {
+  const inp = document.getElementById("chat-input"), box = document.getElementById("chat-msgs");
+  const text = inp.value.trim(); if (!text) return; inp.value = "";
+  /* v5: 消息加时间戳 */
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+  box.appendChild(h(`<div class="msg me">${esc(text)}<div class="msg-time">${timeStr}</div></div>`).firstChild);
+  box.scrollTop = box.scrollHeight;
+  /* v5: 显示打字指示器（三个跳动的点） */
+  const typing = document.createElement("div");
+  typing.className = "typing-indicator";
+  typing.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+  box.appendChild(typing);
+  box.scrollTop = box.scrollHeight;
+  try {
+    const r = await api("/api/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: SESSION.role, message: text })
+    });
+    /* v5: 1秒后移除打字指示器并显示回复 */
+    setTimeout(() => {
+      typing.remove();
+      let extra = "";
+      if (r.intent === "query_hazard" && Array.isArray(r.data))
+        extra = r.data.length ? "<br>" + r.data.map(d => `· ${HZL[d.hazard_class] || d.hazard_class} @ ${esc(d.zone)}（${SEV[d.severity]}）`).join("<br>") : "<br>当前无活跃风险 ✓";
+      if (r.intent === "query_plan" && r.data) extra = `<br>当前模式：<b>${esc(r.data.mode)}</b>${r.data.alert ? "（" + esc(r.data.alert) + "）" : ""}`;
+      /* v5: bot 消息也加时间戳 */
+      const replyTime = new Date();
+      const replyTimeStr = replyTime.getHours().toString().padStart(2, "0") + ":" + replyTime.getMinutes().toString().padStart(2, "0");
+      box.appendChild(h(`<div class="msg bot">${esc(r.reply)}${extra}<div class="msg-time">${replyTimeStr}</div></div>`).firstChild);
+      box.scrollTop = box.scrollHeight;
+      const jump = {
+        query_hazard: "hazards", query_plan: "matrix", query_canteen: "canteen", query_asset: "assets",
+        report_incident: "report", query_safety: "travel", find_resource: "spaces", book_resource: "spaces",
+        query_health: "child", query_course: "courses", ask_leave: "leave", query_meal: "meals"
+      }[r.intent];
+      if (jump && (ROLE_NAV[SESSION.role] || []).some(([k]) => k === jump)) go(jump);
+    }, 1000);
+  } catch (e) {
+    typing.remove();
+    box.appendChild(h(`<div class="msg bot">出错了：${esc(e.message)}</div>`).firstChild);
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+/* ============================================================
+   红门哨兵 v5 · 页面层：18 个角色页面（视觉增强版）
+   工厂增强：heroStat / statCard / metricRow / divider / statusDot / badge / progressBar
+   ECharts 增强：渐变色 / animationDelay / chartTheme
+   设计原则：打破同构 · 信息密度分层 · 每页签名时刻
+   ============================================================ */
+const PAGES = {
+  dashboard: pgDashboard, matrix: pgMatrix, workbench: pgWorkbench, spaces: pgSpaces, inbox: pgInbox,
+  travel: pgTravel, canteen: pgCanteen, report: pgReport, assets: pgAssets, hazards: pgHazards, approvals: pgApprovals,
+  child: pgChild, courses: pgCourses, leave: pgLeave, meals: pgMeals, leaveadmin: pgLeaveAdmin,
+  inspections: pgInspections, venues: pgVenues
+};
+
+/* ==================== 辅助工具：严重度色条 ==================== */
+/* 根据 severity 级别返回左边框色值（越高越红） */
+function sevBorder(severity) {
+  const colors = ["", "var(--brand)", C_CYAN, C_ORANGE, C_RED];
+  return colors[Number(severity)] || colors[1];
+}
+
+/* 来源对应的图标和色彩 */
+const SRC_META = {
+  citizen:  { icon: "ri-camera-line", color: "#7b46d1" },
+  vision:   { icon: "ri-vidicon-line", color: C_CYAN },
+  iot:      { icon: "ri-wifi-line", color: C_ORANGE },
+  asset:    { icon: "ri-qr-scan-2-line", color: C_BLUE },
+  scenario: { icon: "ri-film-line", color: "#e37318" },
+};
+
+/* ==================== 1. 指挥大屏（admin=校长） ==================== */
+async function pgDashboard() {
+  const [hazards, tele, stats, scens, cur, evac] = await Promise.all([
+    api("/api/brain/hazards"), api("/api/perception/telemetry/latest"),
+    api("/api/incidents/stats"), api("/api/scenario"), api("/api/brain/plan/current"),
+    api("/api/brain/routes/evacuation")]);
+  const anomaly = tele.filter(t => t.is_anomaly).length;
+  const maxCost = Math.max(...evac.routes.map(r => r.cost_m), 1);
+  const el = h(`<div>
+    <div class="data-grid">
+      ${heroStat("ri-alarm-warning-line", hazards.length, "活跃风险事件", "多模态融合确认", hazards.length ? "bad" : "good")}
+      ${heroStat("ri-wifi-line", anomaly, "异常 IoT", `<span style="font-size:12px;color:var(--ink-3)">${anomaly}/${tele.length} 在网设备</span>`, anomaly ? "warn" : "good")}
+      ${heroStat("ri-todo-line", stats.total, "累计工单", Object.entries(stats.by_source).map(([k, v]) => k + " " + v).join(" · ") || "—")}
+      ${heroStat(cur.mode === "normal" ? "ri-checkbox-circle-line" : "ri-shield-flash-line", cur.mode_label, "校园运行模式", cur.plan ? btn("解除应急", "resetPlan()", { theme: "default", variant: "outline", icon: "ri-refresh-line" }) : "", cur.mode === "normal" ? "good" : "bad")}
+    </div>
+    <div class="grid g2">
+      ${panel("ri-node-tree", "融合风险事件", "点击条目展开本体推理链",
+        `<div id="dz-hz">${hazards.length ? "" : empty("ri-shield-check-line", "无活跃风险。所有信号均低于交叉印证阈值。")}</div>`)}
+      ${panel("ri-film-line", "场景注入器", "一键回放典型事件驱动全链路",
+        `<div id="dz-scen"></div><div class="timeline" id="dz-tl" style="display:none"></div>`)}
+      ${panel("ri-broadcast-line", "IoT 遥测实时状态", "",
+        `<table class="tbl"><tr><th>设备</th><th>读数</th><th>阈值</th><th>状态</th></tr>
+        ${tele.map(t => `<tr><td>${esc(t.name)}<div class="muted">${t.device_id} @ ${esc(t.zone)}</div></td>
+        <td><b>${t.value ?? "—"}</b> ${t.unit || ""}</td><td class="muted">${t.threshold_high ? "≤" + t.threshold_high : "—"}</td>
+        <td>${t.is_anomaly ? statusDot("error", "越限") : statusDot("online", "正常")}</td></tr>`).join("")}</table>`)}
+      ${panel("ri-route-line", "实时疏散路线", "Dijkstra · 风险加权",
+        `${evac.routes.map(r => `<div class="list-item"><b>${esc(r.from)}</b> <i class="ri-arrow-right-s-line" style="color:var(--ink-3)"></i> ${r.path.slice(1).map(esc).join(" → ")}
+        ${progressBar(Math.round(r.cost_m / maxCost * 100), r.cost_m > maxCost * 0.7 ? C_RED : (r.cost_m > maxCost * 0.4 ? C_ORANGE : C_GREEN), `代价 ${r.cost_m}m`)}
+        </div>`).join("")}
+        <div class="muted" style="margin-top:8px">风险区域：${Object.keys(evac.hazard_zones).length ? Object.entries(evac.hazard_zones).map(([z, s]) => `${esc(z)}(${SEV[s]})`).join("、") : "无 — 全部走最短路"}</div>`)}
+    </div></div>`);
+  const hzBox = el.querySelector("#dz-hz");
+  hazards.forEach(hz => {
+    const borderColor = sevBorder(hz.severity);
+    const item = h(`<div class="list-item" style="cursor:pointer;border-left-color:${borderColor};border-left-width:4px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      ${tag(SEV[hz.severity], SEVT[hz.severity])} <i class="${HZI[hz.hazard_class] || "ri-alert-line"}" style="color:var(--brand)"></i>
+      <b>${HZL[hz.hazard_class] || hz.hazard_class}</b>
+      <span class="muted">@ ${esc(hz.zone)} · ${fmt(hz.created_at)} · ${hz.sources.length}路信号</span>
+      <span style="margin-left:auto">${btn(hz.status === "active" ? "开始处置" : "标记解除", `event.stopPropagation();advanceHazard(${hz.id})`, { theme: "default", variant: "outline" })}</span></div>
+      <pre class="chain" style="display:none">${esc(hz.inference)}</pre></div>`).firstChild;
+    item.onclick = () => { const p = item.querySelector("pre"); p.style.display = p.style.display === "none" ? "" : "none" };
+    hzBox.appendChild(item);
+  });
+  const scenBox = el.querySelector("#dz-scen");
+  /* 场景注入器按钮：每个场景不同色系 */
+  const scenColors = ["#0052d9", "#0fa8bd", "#7b46d1", "#e37318", "#d54941", "#2ba471"];
+  scens.forEach((s, i) => {
+    const c = scenColors[i % scenColors.length];
+    scenBox.appendChild(h(`<button class="scen-btn" onclick="runScenario('${s.name}')" style="border-left:3px solid ${c}">
+    <b><i class="ri-play-circle-line" style="color:${c}"></i>${esc(s.label)}</b><div class="muted">${esc(s.desc)}</div></button>`).firstChild);
+  });
+  return el;
+}
+async function runScenario(name) {
+  const tl = document.getElementById("dz-tl"); tl.style.display = ""; tl.innerHTML = `<i class="ri-loader-4-line spin"></i> 注入中…`;
+  try {
+    const r = await api("/api/scenario/" + name, { method: "POST" });
+    tl.innerHTML = r.timeline.map(t => "▸ " + esc(t)).join("<br>"); refreshMode();
+    setTimeout(() => go("dashboard"), 2600);
+  } catch (e) { tl.textContent = "失败：" + e.message }
+}
+async function advanceHazard(id) { await api(`/api/brain/hazards/${id}/advance`, { method: "POST" }); go(document.querySelector("nav .active").dataset.page) }
+async function resetPlan() { await api("/api/brain/plan/reset", { method: "POST" }); refreshMode(); go("dashboard") }
+
+/* ==================== 2. 预案矩阵（admin） ==================== */
+async function pgMatrix() {
+  const rows = await api("/api/brain/plan/matrix");
+  const LV = { blue: "蓝", yellow: "黄", orange: "橙", red: "红", warning: "预警" };
+  const AT = { rainstorm: "暴雨", typhoon: "台风", earthquake: "地震", heat: "高温", air_pollution: "空气污染" };
+  return h(`<div>
+    ${divider("预警类型 × 级别 → 运行模式")}
+    ${panel("ri-list-settings-line", "预警响应矩阵", "全量公开 · 每次切换留审计痕",
+    `<div class="muted" style="margin-bottom:10px">数字化自北京市教委预警响应流程：预警类型×级别 → 运行模式 + 动作清单。标记「自动」的动作由智能体直接执行。</div>
+    <table class="tbl"><tr><th>预警</th><th>运行模式</th><th>动作清单</th></tr>
+    ${rows.map(p => `<tr style="transition:background .15s ease"><td><b>${AT[p.alert_type] || p.alert_type}·${LV[p.alert_level] || p.alert_level}</b></td>
+    <td>${tag(p.mode_label, p.mode === "normal" ? "success" : (p.mode === "staggered" ? "primary" : "danger"))}</td>
+    <td>${p.actions.map(a => `<div style="margin-bottom:3px">${a.auto ? tag("自动", "primary", "ri-cpu-line") : tag(a.owner, "default")} ${esc(a.text)}</div>`).join("")}</td></tr>`).join("")}
+    </table>`)}</div>`);
+}
+
+/* ==================== 3. 工单处置台 ==================== */
+async function pgWorkbench() {
+  const list = await api("/api/incidents?limit=40");
+  const SRC = { citizen: "随手拍", vision: "AI视频", iot: "传感器", asset: "扫码报修", scenario: "场景" };
+  const el = h(`<div>
+    ${panel("ri-todo-line", `工单处置台 ${badge(list.length, list.length > 10 ? "warn" : "")}`, "状态机：上报→派单→处理→解决→归档",
+    list.length ? `<table class="tbl"><tr><th>工单号</th><th>描述</th><th>AI分类/派单</th><th>来源</th><th>状态</th><th>操作</th></tr>
+    ${list.map(i => {
+      const sm = SRC_META[i.source] || SRC_META.citizen;
+      return `<tr><td><b>${i.ticket_no}</b><div class="muted">${fmt(i.created_at)}</div></td>
+      <td style="max-width:260px">${esc(i.description)}<div class="muted"><i class="ri-map-pin-line"></i> ${esc(i.location)}</div></td>
+      <td>${tag(CATL[i.category] || i.category, "primary")}<div class="muted">${esc(i.assignee || "—")} · P${i.priority}</div></td>
+      <td><span style="display:inline-flex;align-items:center;gap:4px"><i class="${sm.icon}" style="color:${sm.color}"></i>${tag(SRC[i.source] || i.source, "default")}</span></td>
+      <td>${tag(STL[i.status], i.status === "resolved" || i.status === "closed" ? "success" : (i.status === "processing" ? "warning" : "primary"))}</td>
+      <td>${nextBtn(i)}</td></tr>`}).join("")}</table>` : empty("ri-todo-line", "暂无工单"))}</div>`);
+  return el;
+}
+function nextBtn(i) {
+  const nxt = { dispatched: ["processing", "开始处理"], processing: ["resolved", "标记解决"], resolved: ["closed", "归档"] }[i.status];
+  return nxt ? btn(nxt[1], `advTicket('${i.ticket_no}','${nxt[0]}')`) : "—";
+}
+async function advTicket(no, to) {
+  await api(`/api/incidents/${no}/status`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ to_status: to, operator: SESSION.name })
+  });
+  toast("工单状态已更新");
+  go(document.querySelector("nav .active").dataset.page);
+}
+
+/* ==================== 4. 风险事件（community） ==================== */
+async function pgHazards() {
+  const hazards = await api("/api/brain/hazards");
+  const el = h(`<div>
+    ${divider("多模态融合确认 · 本体推理")}
+    ${panel("ri-alarm-warning-line", "活跃风险事件", "",
+    `<div id="hz-box">${hazards.length ? "" : empty("ri-shield-check-line", "当前无活跃风险")}</div>`)}</div>`);
+  const box = el.querySelector("#hz-box");
+  hazards.forEach(hz => {
+    const borderColor = sevBorder(hz.severity);
+    const item = h(`<div class="list-item" style="cursor:pointer;border-left-color:${borderColor};border-left-width:4px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      ${tag(SEV[hz.severity], SEVT[hz.severity])} <i class="${HZI[hz.hazard_class] || "ri-alert-line"}" style="color:var(--brand)"></i>
+      <b>${HZL[hz.hazard_class] || hz.hazard_class}</b> <span class="muted">@ ${esc(hz.zone)}</span>
+      <span style="margin-left:auto">${btn(hz.status === "active" ? "开始处置" : "标记解除", `event.stopPropagation();advanceHazard(${hz.id})`, { theme: "default", variant: "outline" })}</span></div>
+      ${hz.suggestion ? `<div class="notice important" style="margin-top:8px;margin-bottom:0"><i class="ri-lightbulb-flash-line"></i><div class="bd"><b>处置建议</b><div class="muted">${esc(hz.suggestion)}</div></div></div>` : ""}
+      <div class="chain-wrap" style="max-height:0;overflow:hidden;transition:max-height .4s ease">
+        <pre class="chain">${esc(hz.inference)}</pre></div></div>`).firstChild;
+    /* 推理链展开动画 */
+    item.onclick = () => {
+      const wrap = item.querySelector(".chain-wrap");
+      if (wrap.style.maxHeight === "0px" || wrap.style.maxHeight === "") {
+        wrap.style.maxHeight = wrap.scrollHeight + "px";
+      } else {
+        wrap.style.maxHeight = "0px";
+      }
+    };
+    box.appendChild(item);
+  });
+  return el;
+}
+
+/* ==================== 5. 通知中心（parent/teacher） ==================== */
+async function pgInbox() {
+  const list = await api(`/api/notifications/inbox/${SESSION.user_id}`);
+  const el = h(`<div>
+    ${divider("定向到人 · 回执可查 · 紧急未读15分钟升级电话补呼")}
+    ${panel("ri-notification-3-line", "通知中心", "",
+    `<div id="nb">${list.length ? "" : empty("ri-mail-check-line", "暂无通知")}</div>`)}</div>`);
+  const box = el.querySelector("#nb");
+  const LVL = { info: "普通", important: "重要", emergency: "紧急·需回执" };
+  const LVI = { info: "ri-information-line", important: "ri-error-warning-line", emergency: "ri-alarm-warning-line" };
+  const LVC = { info: C_BLUE, important: C_ORANGE, emergency: C_RED };
+  list.forEach(n => {
+    const borderColor = LVC[n.level] || C_BLUE;
+    const item = h(`<div class="list-item" style="border-left-color:${borderColor};border-left-width:3px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <i class="${LVI[n.level] || "ri-information-line"}" style="color:${borderColor};font-size:17px"></i>
+        <div class="bd" style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <b>${esc(n.title)}</b>
+            ${!n.read_at ? statusDot("online", "未读") : ""}
+            ${n.read_at ? tag("已读", "success") : tag("未读", "danger")}
+          </div>
+          <div class="muted" style="margin-top:4px">${fmt(n.created_at)} · ${esc(n.created_by)} · ${LVL[n.level]}</div>
+          <div style="margin-top:6px;white-space:pre-wrap;max-height:76px;overflow:hidden;cursor:pointer;transition:max-height .3s ease" class="nbody">${esc(n.body)}</div>
+          ${n.read_at ? "" : `<div style="margin-top:8px" class="receipt-wrap">${btn("我已知晓（回执）", `readNotif(${n.id},this)`, { icon: "ri-check-line" })}</div>`}
+        </div>
+      </div></div>`).firstChild;
+    item.querySelector(".nbody").onclick = e => { e.target.style.maxHeight = e.target.style.maxHeight ? "" : "none" };
+    box.appendChild(item);
+  });
+  return el;
+}
+async function readNotif(id, btnEl) {
+  await api(`/api/notifications/${id}/read/${SESSION.user_id}`, { method: "POST" });
+  /* 回执确认动画 */
+  const wrap = btnEl.closest(".receipt-wrap");
+  wrap.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;color:#2ba471;font-size:13px;animation:fadein .3s ease"><i class="ri-checkbox-circle-line"></i> 回执已提交</span>`;
+}
+
+/* ==================== 6. 孩子空间（parent 内嵌，一人一档） ==================== */
+async function pgChild() {
+  if (!CHILD) return h(empty("ri-user-heart-line", "未关联孩子档案"));
+  const p = await api(`/api/children/${CHILD.id}/profile?operator_id=${SESSION.user_id}`);
+  const s = p.student, hr = p.health_records, f = p.fitness;
+  /* 成绩等级映射为百分比 */
+  const levelPct = { "优": 95, "良": 78, "中": 60, "待提高": 35 };
+  const levelColor = { "优": C_GREEN, "良": C_BLUE, "中": C_ORANGE, "待提高": C_RED };
+  const el = h(`<div>
+    <!-- 签名时刻：profile-hero 光斑装饰 -->
+    <div class="panel"><div class="panel-bd profile-hero">
+      <div class="av">${esc(s.name.slice(-2))}</div>
+      <div style="flex:1;position:relative;z-index:1">
+        <div style="font-size:17px;font-weight:700">${esc(s.name)} <span class="muted" style="font-size:13px">${esc(s.class_name)}</span></div>
+        <div class="muted" style="margin-top:4px"><i class="ri-price-tag-3-line"></i> 兴趣：${(s.interests || []).map(esc).join("、") || "未填"}
+          ${btn("编辑", "editInterests()", { theme: "default", variant: "text", icon: "ri-edit-line" })}</div>
+        <div class="muted" style="margin-top:2px"><i class="ri-shield-user-line"></i> ${esc(p.note)}</div>
+      </div></div></div>
+    ${metricRow([
+      { icon: "ri-scales-3-line", num: p.bmi ? p.bmi.bmi : "—", label: `BMI ${p.bmi && p.bmi.status ? "·" + p.bmi.status : ""}` },
+      { icon: "ri-eye-line", num: p.vision ? p.vision.latest : "—", label: "视力（较低眼）" },
+      { icon: "ri-run-line", num: f.avg_score || "—", label: `体测均分 · 弱项${f.weak_items.length ? f.weak_items.length + "项" : "无"}` },
+    ])}
+    <div class="grid g2">
+      ${panel("ri-line-chart-line", "每学期健康档案", "身高/体重/视力/龋齿纵向对比",
+        `<div class="vchart" id="ch-growth"></div>
+        <table class="tbl" style="margin-top:10px"><tr><th>学期</th><th>身高</th><th>体重</th><th>视力(左/右)</th><th>龋齿</th></tr>
+        ${hr.map(r => `<tr><td>${r.term}</td><td>${r.height_cm}cm</td><td>${r.weight_kg}kg</td>
+          <td>${r.vision_left} / ${r.vision_right}</td><td>${r.dental_caries || 0}颗</td></tr>`).join("")}</table>`)}
+      ${panel("ri-mental-health-line", "健康提示", "规则引擎生成 · 非医疗诊断",
+        `${p.vision && p.vision.alert ? `<div class="notice important"><i class="ri-eye-line"></i><div class="bd"><b>视力提醒</b><div class="muted">${esc(p.vision.advice)}</div><div class="muted">依据：${esc(p.vision.basis)}</div></div></div>` : ""}
+        ${p.nutrition ? `<div class="notice"><i class="ri-heart-pulse-line"></i><div class="bd"><b>营养建议（${esc(p.nutrition.status)}）</b>
+          ${p.nutrition.tips.map(t => `<div class="muted">· ${esc(t)}</div>`).join("")}
+          ${(p.nutrition.suggest_supplements || []).length ? `<div style="margin-top:6px">建议关注补充：${p.nutrition.suggest_supplements.map(x => tag(x, "success")).join(" ")}</div>` : ""}
+          <div class="muted" style="margin-top:6px">${esc(p.nutrition.disclaimer)}</div></div></div>` : ""}`)}
+      ${panel("ri-run-line", "体质健康（AI 体测）", "",
+        `<table class="tbl"><tr><th>学期</th><th>项目</th><th>成绩</th><th>折算分</th><th>来源</th></tr>
+        ${f.records.map(r => `<tr><td>${r.term}</td><td>${esc(r.item)}</td><td>${r.value}${esc(r.unit || "")}</td>
+          <td>${tag(r.score, r.score >= 90 ? "success" : (r.score < 70 ? "danger" : "primary"))}</td>
+          <td>${r.source === "ai_video" ? tag("AI视频计数", "purple", "ri-cpu-line") : tag("人工", "default")}</td></tr>`).join("")}</table>
+        ${f.prescriptions.map(x => `<div class="notice important" style="margin-top:10px"><i class="ri-guide-line"></i><div class="bd"><b>锻炼处方 · ${esc(x.item)}</b><div class="muted">${esc(x.plan)}</div></div></div>`).join("")}
+        <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+          <b style="font-size:13.5px"><i class="ri-video-upload-line" style="color:var(--brand)"></i> AI 体测打卡</b>
+          <span class="muted">上传动作视频 → 骨架关键点计数，视频推理后即丢弃、只存成绩</span>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+            <select id="fv-item" class="native inline"><option>一分钟跳绳</option><option>仰卧起坐</option><option>开合跳</option></select>
+            <input type="file" id="fv-file" accept="video/*" class="native inline" style="flex:1">
+            ${btn("上传分析", "uploadFitness()", { icon: "ri-magic-line" })}</div>
+          <div class="muted" style="margin-top:6px;display:flex;align-items:center;gap:4px"><i class="ri-drag-drop-line"></i> 支持拖拽视频文件到上方输入框</div>
+          <div class="muted" id="fv-msg" style="margin-top:6px"></div></div>`)}
+      ${panel("ri-graduation-cap-line", "成绩纵向对比", "只看自己进步 · 不显示班级排名",
+        `${p.academic.map(a => `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px">
+            <span>${esc(a.subject)}（${a.term}）</span>${tag(a.level, a.level === "优" ? "success" : (a.level === "待提高" ? "danger" : "primary"))}
+          </div>
+          ${progressBar(levelPct[a.level] || 50, levelColor[a.level] || C_BLUE, "")}
+        </div>`).join("")}
+        <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+          <b style="font-size:13.5px"><i class="ri-compass-3-line" style="color:var(--brand)"></i> 校外兴趣班登记</b>
+          <span class="muted">登记后选修课不再重复推荐同项目</span>
+          <div id="ec-list">${p.external_classes.map(e => `<div class="list-item">${tag(e.category, "primary")} ${esc(e.name)} · ${e.weekly_hours}h/周
+            <span style="float:right">${btn("删除", `delEC(${e.id})`, { theme: "danger", variant: "text", icon: "ri-delete-bin-line" })}</span></div>`).join("") || "<div class='muted' style='margin:8px 0'>暂未登记</div>"}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <select id="ec-cat" class="native inline"><option>体育</option><option>艺术</option><option>科技</option><option>人文</option><option>劳动</option></select>
+            <input id="ec-name" class="native" placeholder="机构/班级名称，如：XX游泳馆少儿班" style="flex:1;min-width:160px">
+            ${btn("登记", "addEC()", { icon: "ri-add-line" })}</div></div>`)}
+    </div></div>`);
+  /* 身高/体重双轴趋势（渐变面积填充） */
+  mount(() => chart(el.querySelector("#ch-growth"), {
+    tooltip: { trigger: "axis" },
+    legend: { top: 0, itemWidth: 14, textStyle: { fontSize: 11 } },
+    grid: { left: 42, right: 42, top: 30, bottom: 24 },
+    xAxis: { type: "category", data: hr.map(r => r.term) },
+    yAxis: [{ type: "value", name: "cm", min: v => Math.floor(v.min - 5) }, { type: "value", name: "kg", min: v => Math.floor(v.min - 3), splitLine: { show: false } }],
+    series: [
+      { name: "身高(cm)", type: "line", smooth: true, data: hr.map(r => r.height_cm),
+        itemStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, direction: "vertical", stops: [{ offset: 0, color: C_BLUE }, { offset: 1, color: "rgba(0,82,217,0.05)" }] } } },
+        areaStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: "rgba(0,82,217,0.25)" }, { offset: 1, color: "rgba(0,82,217,0.02)" }] } } } },
+      { name: "体重(kg)", type: "line", smooth: true, yAxisIndex: 1, data: hr.map(r => r.weight_kg),
+        itemStyle: { color: C_ORANGE },
+        areaStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: "rgba(227,115,24,0.2)" }, { offset: 1, color: "rgba(227,115,24,0.02)" }] } } } },
+    ]
+  }, 200));
+  return el;
+}
+async function editInterests() {
+  const cur = (CHILD.interests || []).join("、");
+  const v = prompt("孩子兴趣标签（用、分隔）：", cur); if (v === null) return;
+  const interests = v.split(/[、,，\s]+/).filter(Boolean);
+  CHILD = await api(`/api/children/${CHILD.id}/interests?operator_id=${SESSION.user_id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" }, body: JSON.stringify({ interests })
+  });
+  go("child");
+}
+async function addEC() {
+  const category = document.getElementById("ec-cat").value, name = document.getElementById("ec-name").value.trim();
+  if (!name) { toast("请填写机构/班级名称", "error"); return }
+  await api(`/api/children/${CHILD.id}/external-classes?operator_id=${SESSION.user_id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category, name, weekly_hours: 2 })
+  });
+  toast("已登记，选修课将不再重复推荐同项目"); go("child");
+}
+async function delEC(id) {
+  await api(`/api/children/${CHILD.id}/external-classes/${id}?operator_id=${SESSION.user_id}`, { method: "DELETE" });
+  go("child");
+}
+async function uploadFitness() {
+  const f = document.getElementById("fv-file").files[0], msg = document.getElementById("fv-msg");
+  if (!f) { msg.textContent = "请先选择视频文件"; return }
+  msg.innerHTML = `<i class="ri-loader-4-line spin"></i> AI 分析中（骨架关键点提取→动作计数）…`;
+  const fd = new FormData(); fd.append("item", document.getElementById("fv-item").value);
+  fd.append("term", "2025-2026下"); fd.append("video", f);
+  try {
+    const r = await api(`/api/children/${CHILD.id}/fitness-video?operator_id=${SESSION.user_id}`, { method: "POST", body: fd });
+    msg.innerHTML = `<i class="ri-checkbox-circle-line" style="color:#2ba471"></i> ${esc(r.message)}<br>规范性提示：${(r.issues || []).map(esc).join("；") || "动作标准"} · ${tag("原始视频已丢弃", "success")}`;
+  } catch (e) { msg.textContent = "失败：" + e.message }
+}
+
+/* ==================== 7. 选修课（parent · AI千人千面推荐） ==================== */
+async function pgCourses() {
+  if (!CHILD) return h(empty("ri-book-open-line", "未关联孩子档案"));
+  const persona = localStorage.getItem("rq-personalized") !== "off";
+  const q = persona ? `?student_id=${CHILD.id}&operator_id=${SESSION.user_id}&personalized=true` : "?personalized=false";
+  const [courses, enrolls] = await Promise.all([
+    api("/api/courses" + q), api(`/api/courses/enrollments/${CHILD.id}?operator_id=${SESSION.user_id}`)]);
+  const el = h(`<div>
+    <div class="notice" style="border-left-width:4px;${persona ? "background:rgba(0,82,217,.08)" : ""}">
+      <i class="ri-magic-line"></i><div class="bd" style="flex:1"><b>${esc(CHILD.name)} 的选修课${persona ? "（AI个性化排序）" : "（目录原序）"}</b>
+      <span class="muted">依据：体测弱项/健康趋势/成绩扬长补短/兴趣/校外班排除/时段冲突 六因子</span></div>
+      <span style="flex:none">${btn(persona ? "关闭个性化" : "开启个性化", "togglePersona()", { theme: persona ? "primary" : "default", variant: "outline", icon: "ri-shuffle-line" })}</span></div>
+    <div class="grid g2">
+    <div>
+      ${courses.map(c => `<div class="course ${c.tag === "优先推荐" ? "rec" : ""}">
+        <div class="ttl"><b>${esc(c.name)}</b> ${tag(c.category, "primary")}
+        ${c.tag === "优先推荐" ? tag("优先推荐", "success", "ri-star-fill") : ""}
+        ${c.tag === "探索推荐" ? tag("探索推荐 · 防茧房", "purple", "ri-compass-3-line") : ""}
+        ${c.excluded ? tag("校外已学 · 不重复推荐", "default") : ""}
+        ${c.conflict ? tag(c.conflict, "warning") : ""}</div>
+        <div class="muted" style="margin-top:5px"><i class="ri-time-line"></i> ${WD[c.weekday]} ${c.time_slot} · ${esc(c.teacher)} · 名额 ${c.enrolled}/${c.capacity}</div>
+        <div class="route-bar"><i style="width:${c.capacity ? Math.min(c.enrolled / c.capacity * 100, 100) : 0}%;background:${c.enrolled >= c.capacity ? "linear-gradient(90deg,#d54941,#e37318)" : "linear-gradient(90deg,var(--brand),#28d1e8)"}"></i></div>
+        ${c.reasons.length ? `<div class="why" style="max-height:60px;overflow:hidden;transition:max-height .3s ease;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight?'':'none'">${c.reasons.map(r => `<div><i class="ri-arrow-right-s-line"></i>${esc(r)}</div>`).join("")}</div>` : ""}
+        <div style="margin-top:10px">${c.conflict === "已报名本课"
+          ? btn("退课", `cancelCourse(${c.id})`, { theme: "danger", variant: "outline", icon: "ri-close-line" })
+          : (c.conflict ? "" : btn("报名", `enrollCourse(${c.id},'${esc(c.name)}')`, { icon: "ri-add-line" }))}
+        </div></div>`).join("")}
+    </div>
+    ${panel("ri-file-list-3-line", "已报课程", "推荐理由留痕",
+      (enrolls.length ? enrolls.map(e => `<div class="list-item"><b>${esc(e.name)}</b> ${tag(e.category, "primary")}
+        <div class="muted"><i class="ri-time-line"></i> ${WD[e.weekday]} ${e.time_slot} · ${esc(e.teacher)}</div>
+        <div class="muted" style="margin-top:4px"><i class="ri-bookmark-line"></i> ${esc(e.reason_snapshot || "")}</div></div>`).join("") : empty("ri-file-list-3-line", "暂未报名")) +
+      `<div class="muted" style="margin-top:10px">报名时点的推荐理由做快照留存，可追溯「当时为什么推荐」。</div>`)}
+    </div></div>`);
+  return el;
+}
+function togglePersona() {
+  const cur = localStorage.getItem("rq-personalized") !== "off";
+  localStorage.setItem("rq-personalized", cur ? "off" : "on"); go("courses");
+}
+async function enrollCourse(id, name) {
+  try {
+    const r = await api(`/api/courses/${id}/enroll`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: CHILD.id, operator_parent_id: SESSION.user_id, reason: `家长为孩子报名「${name}」` })
+    });
+    toast("报名成功！" + (r.reason_snapshot || "")); go("courses");
+  } catch (e) { toast("报名失败：" + e.message, "error") }
+}
+async function cancelCourse(id) {
+  if (!confirm("确认退课？")) return;
+  try {
+    await api(`/api/courses/${id}/cancel`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: CHILD.id, operator_parent_id: SESSION.user_id })
+    }); go("courses");
+  } catch (e) { toast("退课失败：" + e.message, "error") }
+}
+
+/* ==================== 8. 请假（parent） ==================== */
+async function pgLeave() {
+  if (!CHILD) return h(empty("ri-calendar-event-line", "未关联孩子档案"));
+  const list = await api(`/api/leave/by-student/${CHILD.id}?operator_id=${SESSION.user_id}`);
+  const today = new Date().toISOString().slice(0, 10);
+  const LST = { approved: ["已批准", "success"], pending: ["待班主任审批", "warning"], rejected: ["未批准", "danger"] };
+  const el = h(`<div class="grid g2">
+    ${panel("ri-edit-line", `为 ${esc(CHILD.name)} 请假`, "",
+      `<div class="form-row"><label>开始日期</label><input type="date" id="lv-start" class="native" value="${today}"></div>
+      <div class="form-row"><label>结束日期</label><input type="date" id="lv-end" class="native" value="${today}"></div>
+      <div class="form-row"><label>类型</label>
+      <select id="lv-type" class="native" onchange="document.getElementById('lv-sym').style.display=this.value==='sick'?'block':'none'">
+        <option value="sick">病假</option><option value="personal">事假</option></select></div>
+      <div id="lv-sym" class="form-row"><label>症状（病假必填 · 用于全校缺勤聚集健康监测，脱敏聚合）</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        ${["发热", "咳嗽", "呕吐", "腹泻", "皮疹", "其他"].map(s =>
+          `<button type="button" class="sym-pill t-tag t-tag--default t-tag--light" onclick="this.classList.toggle('t-tag--primary');this.classList.toggle('t-tag--default')" data-sym="${s}" style="border-radius:999px;cursor:pointer;transition:all .15s ease">${s}</button>`).join("")}</div></div>
+      <div class="form-row"><label>备注</label><textarea id="lv-note" class="native" rows="2" placeholder="补充说明（选填）"></textarea></div>
+      ${btn("提交请假", "submitLeave()", { icon: "ri-send-plane-fill", size: "m" })}
+      <div class="muted" id="lv-msg" style="margin-top:8px"></div>
+      <div class="muted" style="margin-top:10px"><i class="ri-shield-check-line"></i> 病假症状只用于同班聚集性缺勤预警（3天内同症状≥3例触发校医排查），不对外公开个人信息。</div>`)}
+    ${panel("ri-history-line", "请假记录", "班主任、校长可见台账",
+      list.length ? `<div class="leave-timeline">${list.map(l => `<div class="list-item" style="border-left-width:3px;border-left-color:${l.status === "approved" ? C_GREEN : (l.status === "pending" ? C_ORANGE : C_RED)}">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <b>${l.start_date}${l.end_date !== l.start_date ? " ~ " + l.end_date : ""}</b>
+          ${tag(LVT[l.leave_type], "primary")} ${tag(l.days + "天(按工作日)", "default")}
+          ${tag(LST[l.status][0], LST[l.status][1])}
+        </div>
+        <div class="muted" style="margin-top:3px">${(l.symptoms || []).map(esc).join("、")}${l.note ? " · " + esc(l.note) : ""}${l.approved_by ? " · 审批人：" + esc(l.approved_by) : ""}</div></div>`).join("")}</div>` : empty("ri-calendar-check-line", "暂无请假记录"))}
+  </div>`);
+  return el;
+}
+async function submitLeave() {
+  const msg = document.getElementById("lv-msg");
+  /* 收集 pill 按钮选中的症状 */
+  const symptoms = [...document.querySelectorAll(".sym-pill.t-tag--primary")].map(c => c.dataset.sym);
+  const body = {
+    student_id: CHILD.id, parent_id: SESSION.user_id,
+    start_date: document.getElementById("lv-start").value, end_date: document.getElementById("lv-end").value,
+    leave_type: document.getElementById("lv-type").value,
+    symptoms: symptoms.length ? symptoms : null, note: document.getElementById("lv-note").value || null
+  };
+  try {
+    const r = await api("/api/leave", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    toast(`已提交（${r.days}天，待班主任审批）`); go("leave");
+  } catch (e) { msg.textContent = "失败：" + e.message }
+}
+
+/* ==================== 9. 用餐日历（parent · 月勾选 + 后付费账单） ==================== */
+async function pgMeals() {
+  if (!CHILD) return h(empty("ri-restaurant-line", "未关联孩子档案"));
+  const month = curMonth();
+  const [plan, bill] = await Promise.all([
+    api(`/api/meals/plan/${CHILD.id}/${month}?operator_id=${SESSION.user_id}`),
+    api(`/api/meals/bill/${CHILD.id}/${month}?operator_id=${SESSION.user_id}`)]);
+  const checked = new Set(plan ? plan.days : []);
+  const [y, m] = month.split("-").map(Number);
+  const first = new Date(y, m - 1, 1), dim = new Date(y, m, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;
+  let cells = "";
+  for (let i = 0; i < lead; i++) cells += "<div class='d blank'></div>";
+  for (let d = 1; d <= dim; d++) {
+    const dow = new Date(y, m - 1, d).getDay();
+    const wk = dow === 0 || dow === 6;
+    cells += `<div class="d ${wk ? "off" : (checked.has(d) ? "on" : "")}" data-d="${d}" ${wk ? "" : `onclick="toggleMealDay(this)"`}>${d}</div>`;
+  }
+  const el = h(`<div class="grid g2">
+    ${panel("ri-calendar-todo-line", `${month} 用餐日历（${esc(CHILD.name)}）`, "",
+      `${plan && plan.billed ? tag("本月已出账 · 锁定", "default", "ri-lock-line") : ""}
+      <div class="muted">勾选在校用餐的日子（周末不供餐）。原来在微信群里接龙报饭，现在在这里管起来——后厨按勾选人数备餐，班主任能看到台账。</div>
+      <div class="cal"><div class="hd">一</div><div class="hd">二</div><div class="hd">三</div><div class="hd">四</div><div class="hd">五</div><div class="hd">六</div><div class="hd">日</div>${cells}</div>
+      ${plan && plan.billed ? "" : `<div style="margin-top:12px">${btn("保存本月用餐安排", `saveMeals('${month}')`, { icon: "ri-check-line", size: "m" })}</div>`}
+      <div class="muted" id="ml-msg" style="margin-top:8px"></div>
+      <div class="muted" style="margin-top:8px">请假获批时若与用餐日重叠，系统只做提示、由家长自行调整——不自动动钱。</div>`)}
+    ${panel("ri-bank-card-line", "本月账单预览", "后付费 · 无余额",
+      `<div style="display:flex;justify-content:center;margin:var(--sp-4) 0">
+        ${heroStat("ri-money-cny-circle-line", "¥" + bill.amount, "本月餐费", `${bill.days_count}天 × ¥${bill.price_per_meal}/餐`)}
+      </div>
+      <div class="notice"><i class="ri-money-cny-circle-line"></i><div class="bd"><b>缴费方式</b><div class="muted">${esc(bill.payment)}</div></div></div>
+      ${metricRow([
+        { icon: "ri-calendar-check-line", num: bill.days_count, label: "用餐天数" },
+        { icon: "ri-money-cny-circle-line", num: "¥" + bill.price_per_meal, label: "单餐价格" },
+      ])}`)}
+  </div>`);
+  return el;
+}
+function toggleMealDay(el) { el.classList.toggle("on") }
+async function saveMeals(month) {
+  const days = [...document.querySelectorAll(".cal .d.on")].map(x => Number(x.dataset.d));
+  const msg = document.getElementById("ml-msg");
+  try {
+    await api("/api/meals/plan", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: CHILD.id, parent_id: SESSION.user_id, month, days })
+    });
+    toast("已保存本月用餐安排"); go("meals");
+  } catch (e) { msg.textContent = "失败：" + e.message }
+}
+
+/* ==================== 10. 请假·缺勤（teacher） ==================== */
+async function pgLeaveAdmin() {
+  const cls = SESSION.extra?.manage_class || "六年级1班";
+  const [pending, stats, watch, forecast] = await Promise.all([
+    api(`/api/leave/pending?operator_id=${SESSION.user_id}`),
+    api(`/api/leave/class-stats?class_name=${encodeURIComponent(cls)}&operator_id=${SESSION.user_id}`),
+    api(`/api/leave/illness-watch?operator_id=${SESSION.user_id}`),
+    api("/api/meals/kitchen-forecast")]);
+  const watchRows = watch.classes.flatMap(c => c.symptoms.map(s => ({ cls: c.class_name, ...s })));
+  const el = h(`<div>
+    ${watchRows.length ? `<div class="notice emergency" style="animation:pulse 1.5s infinite"><i class="ri-virus-line"></i><div class="bd"><b>缺勤聚集预警（近${watch.window_days}天 同班同症状≥${watch.threshold}例）</b>
+      ${watchRows.map(w => `<div class="muted">${esc(w.cls)} · ${esc(w.symptom)} × ${w.count}例 —— 已进入多模态风险融合，建议配合校医排查</div>`).join("")}</div></div>`
+      : `<div class="notice"><i class="ri-stethoscope-line"></i><div class="bd"><b>症状监测正常</b> <span class="muted">近${watch.window_days}天无同班同症状≥${watch.threshold}例的聚集（数据来源：请假台账症状标签，脱敏聚合）</span></div></div>`}
+    ${divider("请假审批 · 缺勤统计 · 备餐联动")}
+    <div class="grid g2">
+    ${panel("ri-time-line", `待审批请假 ${badge(pending.length, pending.length > 5 ? "danger" : "warn")}`, "",
+      pending.length ? pending.map(l => `<div class="list-item" style="border-left-color:${C_ORANGE};border-left-width:3px"><b>${esc(l.student_name)}</b> · ${l.start_date}${l.end_date !== l.start_date ? " ~ " + l.end_date : ""}
+        ${tag(LVT[l.leave_type], "primary")} ${tag(l.days + "天", "default")}
+        <div class="muted">${(l.symptoms || []).map(esc).join("、")}${l.note ? " · " + esc(l.note) : ""}</div>
+        <div style="margin-top:8px;display:flex;gap:8px">${btn("批准", `approveLeave(${l.id},true)`, { icon: "ri-check-line" })}
+        ${btn("不批", `approveLeave(${l.id},false)`, { theme: "danger", variant: "outline", icon: "ri-close-line" })}</div></div>`).join("") : empty("ri-checkbox-circle-line", "暂无待审批"))}
+    ${panel("ri-bar-chart-grouped-line", `${esc(cls)} 缺勤统计`, "首次能看到每个孩子本月/本学期请了几天假",
+      `<div class="vchart" id="ch-absent"></div>
+      <table class="tbl" style="margin-top:8px"><tr><th>学生</th><th>本月</th><th>本学期</th><th>病假</th><th>事假</th></tr>
+      ${stats.stats.map(s => `<tr><td>${esc(s.student_name)}</td><td>${s.month_days}天</td><td><b>${s.term_days}</b>天</td>
+        <td>${s.sick_days}天</td><td>${s.personal_days}天</td></tr>`).join("")}</table>`)}
+    <div class="span2">${panel("ri-restaurant-2-line", "今日备餐台账", "联动家长用餐日历",
+      forecast.by_class.length ? `<div class="metric-row" style="margin-bottom:var(--sp-3)">${metricRow([
+        { icon: "ri-group-line", num: forecast.total + "人", label: "合计用餐" }
+      ])}</div>
+      <table class="tbl"><tr><th>班级</th><th>人数</th></tr>${forecast.by_class.map(c => `<tr><td>${esc(c.class_name)}</td><td><b>${c.count}</b>人</td></tr>`).join("")}</table>
+      <div class="muted" style="margin-top:6px">${esc(forecast.note)}</div>`
+      : empty("ri-restaurant-line", `今日（${forecast.date}）无用餐登记 · ${forecast.note}`))}</div>
+    </div></div>`);
+  /* 学期请假天数条形图：渐变色堆叠 */
+  mount(() => chart(el.querySelector("#ch-absent"), {
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    legend: { top: 0, itemWidth: 14, textStyle: { fontSize: 11 } },
+    grid: { left: 60, right: 16, top: 28, bottom: 24 },
+    xAxis: { type: "value", minInterval: 1 },
+    yAxis: { type: "category", data: stats.stats.map(s => s.student_name) },
+    series: [
+      { name: "病假", type: "bar", stack: "t", data: stats.stats.map(s => s.sick_days),
+        itemStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: C_ORANGE }, { offset: 1, color: "rgba(227,115,24,0.3)" }] } }, borderRadius: [0, 0, 0, 0] },
+        barMaxWidth: 16 },
+      { name: "事假", type: "bar", stack: "t", data: stats.stats.map(s => s.personal_days),
+        itemStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: C_BLUE }, { offset: 1, color: "rgba(0,82,217,0.3)" }] } }, borderRadius: [0, 4, 4, 0] },
+        barMaxWidth: 16 },
+    ]
+  }, Math.max(140, stats.stats.length * 34 + 50)));
+  return el;
+}
+async function approveLeave(id, ok) {
+  const comment = ok ? "" : prompt("不批准原因：", "请补充说明后重新提交");
+  if (!ok && comment === null) return;
+  try {
+    const r = await api(`/api/leave/${id}/approve`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operator_id: SESSION.user_id, approve: ok, comment: comment || null })
+    });
+    let m = ok ? "已批准" : "已退回";
+    if (r.meal_suggestion) m += "；" + r.meal_suggestion;
+    if (r.illness_watch && r.illness_watch.length) m += "；触发缺勤聚集监测：" + r.illness_watch.map(w => `${w.symptom}×${w.count}例`).join("、");
+    toast(m); go("leaveadmin");
+  } catch (e) { toast("失败：" + e.message, "error") }
+}
+
+/* ==================== 11. 年检公示墙（admin管理 / teacher·parent公示） ==================== */
+async function pgInspections() {
+  const isAdmin = SESSION.role === "admin";
+  const reqs = [api("/api/inspections"), api("/api/inspections/desk-fit")];
+  if (isAdmin) reqs.push(api("/api/inspections/retirement-list"));
+  const [insp, fit, retire] = await Promise.all(reqs);
+  /* 课桌椅匹配率圆环参数 */
+  const fitPct = Math.round(fit.fit_rate * 100);
+  const circumference = 2 * Math.PI * 42;
+  const offset = circumference * (1 - fit.fit_rate);
+  const ringColor = fit.fit_rate >= 0.9 ? C_GREEN : (fit.fit_rate >= 0.7 ? C_ORANGE : C_RED);
+  const el = h(`<div>
+    <div class="data-grid">
+      ${heroStat("ri-shield-check-line", insp.summary.total, "年检门类", "甲醛/直饮水/消防/照明/体育器械/急救箱/课桌椅")}
+      ${heroStat("ri-alarm-warning-line", insp.summary.overdue, "已超期未复检", "", insp.summary.overdue ? "bad" : "good")}
+      ${heroStat("ri-timer-flash-line", insp.summary.due_soon, "30天内临期", "", insp.summary.due_soon ? "warn" : "good")}
+      ${heroStat("ri-close-circle-line", insp.summary.failed, "检查不合格项", "", insp.summary.failed ? "bad" : "good")}
+    </div>
+    ${insp.alerts.length ? `<div class="notice important"><i class="ri-flask-line"></i><div class="bd"><b>效期规则引擎提醒</b>${insp.alerts.map(a => `<div class="muted">${esc(a)}</div>`).join("")}</div></div>` : ""}
+    ${panel("ri-survey-line", "安全年检公示墙", "每年检查一次 · 检化验报告编号可查",
+      `<table class="tbl"><tr><th>门类</th><th>对象</th><th>检查项</th><th>结果</th><th>检查日期</th><th>下次到期</th><th>状态</th></tr>
+      ${insp.records.map(r => {
+        const isOverdue = r.due_status === "已超期";
+        const isDue = r.due_status === "临期";
+        const rowBorder = isOverdue ? C_RED : (isDue ? C_ORANGE : "transparent");
+        return `<tr style="border-left:3px solid ${rowBorder}"><td>${tag(r.category_label, "primary")}</td>
+        <td>${esc(r.target)}</td><td>${esc(r.item)}${r.report_no ? `<div class="muted">报告号 ${r.report_no}</div>` : ""}</td>
+        <td>${r.passed ? `<i class="ri-checkbox-circle-line" style="color:#2ba471"></i>` : `<i class="ri-close-circle-line" style="color:#d54941"></i>`} ${esc(r.result)}</td>
+        <td class="muted">${r.inspect_date}</td><td class="muted">${r.next_due || "—"}</td>
+        <td>${tag(r.due_status, r.due_status === "已超期" ? "danger" : (r.due_status === "临期" ? "warning" : "success"))}</td></tr>`}).join("")}</table>`)}
+    <div class="grid g2">
+      ${panel("ri-armchair-line", "课桌椅身高匹配", "GB/T 3976 联动体检档案",
+        <!-- 匹配率用圆环+大数字展示 -->
+        `<div style="display:flex;justify-content:center;align-items:center;gap:var(--sp-5);padding:var(--sp-4) 0">
+          <div class="progress-ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+              <circle class="ring-fg" cx="50" cy="50" r="42" style="stroke:${ringColor};stroke-dasharray:${circumference};stroke-dashoffset:${offset}"></circle>
+            </svg>
+            <div class="ring-val" style="position:absolute;color:${ringColor}">${fitPct}%</div>
+          </div>
+          <div>
+            <div class="muted">当前配置：${esc(fit.current_model)} · 抽检${fit.sampled}人</div>
+            ${fit.need_adjust.length ? `<div style="margin-top:6px;color:${fit.need_adjust.length > 5 ? C_RED : C_ORANGE};font-size:13px"><i class="ri-alert-line"></i> ${fit.need_adjust.length}人需调整</div>` : ""}
+          </div>
+        </div>
+        ${fit.need_adjust.map(x => `<div class="list-item"><i class="ri-pencil-ruler-2-line" style="color:var(--brand)"></i> ${esc(x.student_name || x.student || "同学")}：建议调整为 ${esc(x.suggest)}</div>`).join("") || "<div class='muted' style='margin-top:8px'>全部匹配</div>"}
+        <div class="muted" style="margin-top:8px">${esc(fit.note)}</div>`)}
+      ${isAdmin && retire ? panel("ri-recycle-line", "资产超龄淘汰清单", "规则引擎自动生成",
+        retire.length ? retire.map(r => `<div class="list-item" style="border-left-color:${C_RED};border-left-width:3px"><b>${esc(r.name)}</b> ${tag(r.code, "default")}
+          <div class="muted">${esc(r.location)} · ${r.quantity}件 · ${r.purchased_year}年购置</div>
+          <div class="muted" style="color:#d54941"><i class="ri-alert-line"></i> ${esc(r.reason)}</div>
+          <div class="muted"><i class="ri-lightbulb-flash-line"></i> ${esc(r.suggestion)}</div></div>`).join("") : empty("ri-recycle-line", "暂无需淘汰资产"))
+      : panel("ri-information-line", "关于本公示", "",
+        `<div class="muted" style="line-height:2.1">· 甲醛/空气检测覆盖翻新教室，报告编号可向学校核验<br>· 直饮水机滤芯与水质按效期规则自动提醒复检<br>· 体育器械不合格项立即停用并公示<br>· 课桌椅匹配只公示比例与调整建议，不公示孩子身高</div>`)}
+    </div></div>`);
+  return el;
+}
+
+/* ==================== 12. 资产管理（admin 专属） ==================== */
+async function pgAssets() {
+  const oid = SESSION.user_id;
+  const [summary, assets, retire] = await Promise.all([
+    api(`/api/assets-summary?operator_id=${oid}`), api(`/api/assets?operator_id=${oid}`),
+    api("/api/inspections/retirement-list")]);
+  const retireCodes = new Set(retire.map(r => r.code));
+  const grades = summary.filter(s => s.grade);
+  /* 成色对应色：1=报废红 2=差橙 3=中黄 4=良青 5=全新绿 */
+  function condColor(c) { return c <= 1 ? C_RED : (c <= 2 ? C_ORANGE : (c <= 3 ? "#e8a52e" : (c <= 4 ? C_CYAN : C_GREEN))); }
+  const el = h(`<div>
+    ${panel("ri-bar-chart-grouped-line", "各年级资产成色", "1=报废 5=全新 · 校长专属视图",
+      `<div class="vchart" id="ch-cond"></div>`)}
+    ${panel("ri-archive-drawer-line", "资产明细", "扫码报修任何角色可用 → 自动生成设施工单派总务处",
+      `<table class="tbl"><tr><th>资产码</th><th>名称</th><th>位置</th><th>购置</th><th>成色</th><th>报修</th></tr>
+      ${assets.map(a => `<tr style="border-left:3px solid ${condColor(a.condition)}">
+        <td><b>${a.code}</b>${a.air_device_id ? `<div>${tag("联动空气监测", "primary", "ri-haze-2-line")}</div>` : ""}
+        ${retireCodes.has(a.code) ? `<div>${tag("建议淘汰", "danger", "ri-recycle-line")}</div>` : ""}</td>
+        <td>${esc(a.name)} ×${a.quantity}</td><td>${esc(a.location)}</td><td>${a.purchased_year || "—"}</td>
+        <td>${rateStars(a.condition)} <span class="muted">${a.condition}/5</span></td>
+        <td>${btn("扫码报修", `reportAsset('${a.code}')`, { theme: "default", variant: "outline", icon: "ri-qr-scan-2-line" })}</td></tr>`).join("")}</table>`)}
+    </div>`);
+  /* 年级资产成色条形图：渐变色+圆角 */
+  mount(() => chart(el.querySelector("#ch-cond"), {
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    legend: { top: 0, itemWidth: 14, textStyle: { fontSize: 11 } },
+    grid: { left: 60, right: 16, top: 30, bottom: 24 },
+    xAxis: { type: "category", data: grades.map(s => s.grade + "年级") },
+    yAxis: { type: "value", max: 5, minInterval: 1 },
+    series: [
+      { name: "平均成色", type: "bar", data: grades.map(s => ({
+        value: s.avg_condition,
+        itemStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: s.avg_condition < 3 ? C_RED : C_CYAN }, { offset: 1, color: s.avg_condition < 3 ? "rgba(213,73,65,0.3)" : "rgba(15,168,189,0.2)" }] } },
+        borderRadius: [4, 4, 0, 0] }
+      })), barMaxWidth: 26, label: { show: true, position: "top", fontSize: 11 } },
+      { name: "最差单件", type: "line", data: grades.map(s => s.worst), itemStyle: { color: C_ORANGE }, lineStyle: { type: "dashed" } },
+    ]
+  }, 210));
+  return el;
+}
+async function reportAsset(code) {
+  const desc = prompt(`资产 ${code} 报修描述（模拟扫二维码后填写）：`, "课桌腿松动摇晃");
+  if (!desc) return;
+  const r = await api(`/api/assets/${code}/report`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reporter_id: SESSION.user_id, description: desc })
+  });
+  toast(`报修成功！工单 ${r.ticket_no} 已派 ${r.assignee}`); go("assets");
+}
+
+/* ==================== 13. 场馆点评（teacher · 教师口碑+差评规避） ==================== */
+async function pgVenues() {
+  const [rep, resources] = await Promise.all([api("/api/venue-reputation"), api("/api/resources")]);
+  const bookable = resources.filter(r => r.capacity);
+  const el = h(`<div>
+    ${divider("场馆口碑榜 · 带班老师亲历点评")}
+    <div class="grid g2">
+    <div>
+      ${rep.map(v => `<div class="list-item" style="border-left:3px solid ${v.avg_rating >= 4 ? C_GREEN : (v.avg_rating >= 3 ? C_ORANGE : C_RED)};cursor:default">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <b>${esc(v.name)}</b> ${tag(v.category, "primary")}
+          ${v.avg_rating ? `<span style="font-size:24px;font-weight:800;color:${v.avg_rating >= 4 ? C_GREEN : (v.avg_rating >= 3 ? C_ORANGE : C_RED)};font-family:Bahnschrift,'DIN Alternate','Segoe UI',var(--app-font)">${v.avg_rating}</span> <span class="muted">(${v.review_count}条)</span>` : '<span class="muted">暂无点评</span>'}
+        </div>
+        ${v.warning ? `<div class="notice important" style="margin-top:8px;margin-bottom:0;border-left-color:${C_RED}"><i class="ri-thumb-down-line" style="color:${C_RED}"></i><div class="bd"><b>差评规避提示</b><div class="muted">${esc(v.warning)}</div></div></div>` : ""}
+        <div style="margin-top:6px">${btn("查看点评", `loadReviews(${v.resource_id},this)`, { theme: "default", variant: "text", icon: "ri-chat-smile-2-line" })}</div>
+        <div class="rv-box"></div></div>`).join("")}
+    </div>
+    ${panel("ri-edit-line", "写点评", "仅教师/校长",
+      `<div class="form-row"><label>场馆</label>
+      <select id="rv-res" class="native">${bookable.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join("")}</select></div>
+      <div class="form-row"><label>评分</label>
+      <select id="rv-rating" class="native"><option value="5">5 星 · 强烈推荐</option><option value="4">4 星 · 推荐</option><option value="3">3 星 · 一般</option><option value="2">2 星 · 不推荐</option><option value="1">1 星 · 强烈不推荐</option></select></div>
+      <div class="form-row"><label>带班体验</label>
+      <textarea id="rv-comment" class="native" rows="4" placeholder="例：场地宽敞但更衣室少，40人以上建议分两批…"></textarea></div>
+      <div class="form-row"><label>到访日期</label><input type="date" id="rv-date" class="native" value="${new Date().toISOString().slice(0, 10)}"></div>
+      ${btn("发布点评", "submitReview()", { icon: "ri-send-plane-fill", size: "m" })}
+      <div class="muted" id="rv-msg" style="margin-top:8px"></div>
+      <div class="muted" style="margin-top:8px">评分≤2星会自动置顶为「差评规避提示」，帮助后续班级避坑。</div>`)}
+    </div></div>`);
+  return el;
+}
+async function loadReviews(rid, btnEl) {
+  const box = btnEl.closest(".list-item").querySelector(".rv-box");
+  if (box.innerHTML) { box.innerHTML = ""; return }
+  const list = await api(`/api/venue-reviews/${rid}`);
+  box.innerHTML = list.length ? list.map(v => `<div class="notice" style="margin-top:6px;margin-bottom:0"><i class="ri-user-star-line"></i><div class="bd">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${rateStars(v.rating)} <b>${esc(v.teacher_name)}</b> <span class="muted"><i class="ri-time-line"></i> ${v.visit_date}</span></div>
+    <div class="muted" style="margin-top:4px">${esc(v.comment)}</div></div></div>`).join("") : "<div class='muted' style='margin-top:6px'>暂无点评</div>";
+}
+async function submitReview() {
+  const msg = document.getElementById("rv-msg");
+  try {
+    await api("/api/venue-reviews", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resource_id: Number(document.getElementById("rv-res").value),
+        teacher_id: SESSION.user_id, rating: Number(document.getElementById("rv-rating").value),
+        comment: document.getElementById("rv-comment").value.trim(),
+        visit_date: document.getElementById("rv-date").value
+      })
+    });
+    toast("点评已发布"); go("venues");
+  } catch (e) { msg.textContent = "失败：" + e.message }
+}
+
+/* ==================== 14. 安全出行（parent） ==================== */
+async function pgTravel() {
+  const wd = Math.min(Math.max(new Date().getDay(), 1), 5) - 1;
+  const [commute, pickup, parking, cur] = await Promise.all([
+    api("/api/brain/routes/commute"), api(`/api/safety/pickup?weekday=${wd}`),
+    api("/api/resources/parking"), api("/api/brain/plan/current")]);
+  const cls = SESSION.extra?.child_class || SESSION.extra?.class || "六年级1班";
+  const mine = pickup.find(p => p.class_name === cls) || pickup.find(p => cls.startsWith(p.class_name.slice(0, 3)));
+  const RL = { recommended: ["推荐", "success"], caution: ["注意", "warning"], avoid: ["避开", "danger"] };
+  const el = h(`<div>
+    ${cur.mode !== "normal" ? `<div class="notice emergency"><i class="ri-alarm-warning-line"></i><div class="bd"><b>当前为「${cur.mode_label}」模式</b><div class="muted">接送安排以最新紧急通知为准，请查看通知中心并提交回执。</div></div></div>` : ""}
+    ${mine ? `<div style="display:flex;justify-content:center;margin-bottom:var(--sp-4)">
+      ${heroStat("ri-graduation-cap-line", mine.dismiss_time, `${esc(cls)} 放学`, `· ${esc(mine.gate)} 交接 · ${esc(mine.note || "按常规")}`)}
+    </div>` : ""}
+    <div class="grid g2">
+    ${panel("ri-parking-box-line", "错峰共享车位", "地磁实时",
+      parking.map(p => `<div class="list-item"><b>${esc(p.name)}</b>
+        ${p.status === "充足" ? statusDot("online", p.status) : (p.status === "紧张" ? statusDot("warning", p.status) : statusDot("error", p.status))}
+        <div class="muted">剩余 <b>${p.free ?? "—"}</b>/${p.capacity} · ${esc(p.address)}</div></div>`).join(""))}
+    <div class="span2">${panel("ri-walk-line", "儿童友好通学路评分", "照明/人行道/护学岗/易涝/活跃风险 五维加权",
+      commute.map(r => `<div class="list-item"><b>${esc(r.name)}</b>
+        ${tag(`${RL[r.level][0]} ${r.score}分`, RL[r.level][1])}
+        ${progressBar(r.score, r.score >= 80 ? `linear-gradient(90deg,${C_GREEN},${C_CYAN})` : (r.score >= 50 ? `linear-gradient(90deg,${C_ORANGE},#e8a52e)` : `linear-gradient(90deg,${C_RED},#e37318)`), "")}
+        ${r.notes.length ? `<div class="muted" style="margin-top:5px">${r.notes.map(esc).join("；")}</div>` : ""}</div>`).join(""))}</div>
+    </div></div>`);
+  return el;
+}
+
+/* ==================== 15. 食安公示（parent） ==================== */
+async function pgCanteen() {
+  const b = await api("/api/canteen/board");
+  const el = h(`<div>
+    <div style="display:flex;justify-content:center;margin-bottom:var(--sp-4)">
+      ${heroStat("ri-shield-check-line", b.food_safety_index, "食安指数", "留样合规40% + 冷链40% + 无未结食安工单20%", b.food_safety_index >= 80 ? "good" : (b.food_safety_index >= 60 ? "warn" : "bad"))}
+    </div>
+    ${metricRow([
+      { icon: "ri-checkbox-multiple-line", num: Math.round(b.sample_compliance_rate * 100) + "%", label: "留样合规率" },
+      { icon: "ri-temp-hot-line", num: b.cold_chain_ok ? "正常" : "异常", label: "冷链状态" },
+      { icon: "ri-todo-line", num: b.open_food_tickets, label: "未结食安工单" },
+    ])}
+    <div class="grid g2">
+      ${panel("ri-temp-hot-line", "留样柜温度曲线", "近24次上报 · 越限读数参与食安风险交叉印证",
+        `<div class="vchart" id="ch-temp"></div>
+        <div class="muted" style="margin-top:6px">红点 = 越限（≥8℃）。越限读数会与家长上报/后厨AI事件交叉印证生成食安风险。</div>`)}
+      ${panel("ri-file-list-3-line", "最近留样台账", "",
+        `<table class="tbl"><tr><th>日期</th><th>餐次</th><th>菜品</th><th>留样</th><th>经手人</th></tr>
+        ${b.recent_samples.map(s => `<tr><td>${s.date}</td><td>${s.meal === "lunch" ? "午餐" : "早餐"}</td><td>${esc(s.dish)}</td><td>${s.weight_g}g</td><td>${esc(s.operator)}</td></tr>`).join("")}</table>`)}
+    </div></div>`);
+  /* 留样柜温度折线：渐变面积填充 + 阈值虚线标注 */
+  mount(() => chart(el.querySelector("#ch-temp"), {
+    tooltip: { trigger: "axis", valueFormatter: v => v + "℃" },
+    grid: { left: 38, right: 16, top: 20, bottom: 24 },
+    xAxis: { type: "category", data: b.fridge_temps.map(t => fmt(t.at)), axisLabel: { interval: 5, fontSize: 10 } },
+    yAxis: { type: "value", name: "℃", max: 12 },
+    series: [{
+      name: "留样柜温度", type: "line", smooth: true, data: b.fridge_temps.map(t => ({
+        value: t.value,
+        itemStyle: t.is_anomaly ? { color: C_RED, borderColor: C_RED } : { color: C_CYAN }
+      })),
+      lineStyle: { color: C_CYAN },
+      areaStyle: { color: { gradient: { x1: 0, y1: 0, x2: 0, y2: 1, stops: [{ offset: 0, color: "rgba(15,168,189,0.3)" }, { offset: 1, color: "rgba(15,168,189,0.02)" }] } } },
+      symbolSize: 6,
+      markLine: { silent: true, symbol: "none", label: { formatter: "阈值 8℃", fontSize: 10, color: C_RED },
+        lineStyle: { color: C_RED, type: "dashed", width: 1.5 },
+        data: [{ yAxis: 8 }] }
+    }]
+  }, 220));
+  return el;
+}
+
+/* ==================== 16. 共享空间/预约（teacher/admin 发起） ==================== */
+async function pgSpaces() {
+  const canBook = ["teacher", "admin"].includes(SESSION.role);
+  const [resources, emap, mine] = await Promise.all([
+    api("/api/resources"), api("/api/resources/emergency-map"),
+    api(`/api/resources/bookings/list?user_id=${SESSION.user_id}`)]);
+  /* 预约状态色映射 */
+  const bkColor = { confirmed: C_GREEN, pending: C_ORANGE, cancelled: C_RED, completed: C_BLUE };
+  const el = h(`<div>
+    ${panel("ri-building-2-line", "周边单位共享空间", "平急两用 · 学校侧发起预约 → 社区侧审批",
+      `<table class="tbl"><tr><th>名称</th><th>类型</th><th>容量</th><th>开放时段</th><th>应急角色</th><th></th></tr>
+      ${resources.map(r => `<tr><td><b>${esc(r.name)}</b><div class="muted">${esc(r.address)}</div></td>
+        <td>${tag(r.category, "primary")}</td><td>${r.capacity || "—"}</td>
+        <td class="muted">${r.open_hours ? Object.values(r.open_hours).map(esc).join(" / ") : "—"}</td>
+        <td>${r.emergency_role ? badge(r.emergency_role === "疏散安置点" ? "避" : "援", "danger") + " " + tag(r.emergency_role, "warning", "ri-first-aid-kit-line") : "—"}</td>
+        <td>${r.capacity && canBook ? btn("预约", `bookRes(${r.id},'${esc(r.name)}')`, { icon: "ri-calendar-check-line" }) : ""}</td></tr>`).join("")}</table>`)}
+    <div class="grid g2">
+      ${panel("ri-first-aid-kit-line", "应急资源一张图", "",
+        emap.length ? `${metricRow([
+          { icon: "ri-building-2-line", num: emap.length, label: "应急资源总数" },
+          { icon: "ri-user-line", num: emap.reduce((s, x) => s + (x.capacity || 0), 0), label: "总容量（人）" },
+        ])}
+        ${emap.map(x => `<div class="list-item">${tag(x.emergency_role, "danger")} <b>${esc(x.name)}</b> <span class="muted">容量${x.capacity || "—"} · ${esc(x.contact || "")}</span></div>`).join("")}` : empty("ri-first-aid-kit-line", "暂无应急资源"))}
+      ${panel("ri-calendar-todo-line", "我的预约", "",
+        mine.length ? mine.map(b => `<div class="list-item" style="border-left-color:${bkColor[b.status] || C_BLUE};border-left-width:3px"><b>${b.booking_no}</b> ${b.date} ${b.start_time}-${b.end_time}
+        ${tag(BKL[b.status], b.status === "confirmed" ? "success" : (b.status === "pending" ? "warning" : "default"))}
+        <div class="muted">${esc(b.purpose)}</div></div>`).join("") : empty("ri-calendar-line", "暂无预约"))}
+    </div></div>`);
+  return el;
+}
+async function bookRes(id, name) {
+  const date = prompt(`预约「${name}」日期（YYYY-MM-DD）：`, "2026-09-15"); if (!date) return;
+  const st = prompt("开始时间（HH:MM）：", "16:00"), et = prompt("结束时间（HH:MM）：", "17:00");
+  const purpose = prompt("用途：", "应急疏散演练"); if (!st || !et || !purpose) return;
+  try {
+    const b = await api("/api/resources/bookings", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource_id: id, user_id: SESSION.user_id, date, start_time: st, end_time: et, purpose, attendees: 30 })
+    });
+    toast("预约已提交，等待社区侧审批：" + b.booking_no); go("spaces");
+  } catch (e) { toast("预约失败：" + e.message, "error") }
+}
+
+/* ==================== 17. 预约审批（community） ==================== */
+async function pgApprovals() {
+  const [bookings, resources] = await Promise.all([
+    api("/api/resources/bookings/list"), api("/api/resources")]);
+  const rName = Object.fromEntries(resources.map(r => [r.id, r.name]));
+  const pending = bookings.filter(b => b.status === "pending");
+  const done = bookings.filter(b => b.status !== "pending").slice(0, 10);
+  const el = h(`<div>
+    ${divider("社区侧核对时段/容量后批准")}
+    <div class="grid g2">
+    ${panel("ri-time-line", `待审批预约 ${badge(pending.length, pending.length > 5 ? "danger" : "")}`, "",
+      pending.length ? pending.map(b => `<div class="list-item" style="border-left-color:${C_ORANGE};border-left-width:3px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <b>${b.booking_no}</b> · ${esc(rName[b.resource_id] || "#" + b.resource_id)}
+        </div>
+        <div class="muted">${b.date} ${b.start_time}-${b.end_time} · ${esc(b.purpose)} · ${b.attendees}人</div>
+        <div style="margin-top:8px;display:flex;gap:8px" class="approve-btns">
+          ${btn("批准", `approveBk('${b.booking_no}','confirmed',this)`, { icon: "ri-check-line" })}
+          ${btn("驳回", `approveBk('${b.booking_no}','cancelled',this)`, { theme: "danger", variant: "outline", icon: "ri-close-line" })}
+        </div></div>`).join("") : empty("ri-checkbox-circle-line", "暂无待审批预约"))}
+    ${panel("ri-history-line", "已处理记录", "",
+      done.length ? done.map(b => `<div class="list-item" style="border-left-color:${b.status === "confirmed" ? C_GREEN : C_RED};border-left-width:3px"><b>${b.booking_no}</b> · ${esc(rName[b.resource_id] || "")}
+        ${tag(BKL[b.status], b.status === "confirmed" ? "success" : "default")}
+        <div class="muted">${b.date} ${b.start_time}-${b.end_time} · ${esc(b.purpose)}</div></div>`).join("") : empty("ri-history-line", "暂无记录"))}
+    </div></div>`);
+  return el;
+}
+async function approveBk(no, to, btnEl) {
+  /* 审批按钮确认状态 */
+  const btns = btnEl.closest(".approve-btns");
+  if (btns) {
+    btns.innerHTML = `<span style="font-size:13px;color:${to === "confirmed" ? C_GREEN : C_RED};animation:fadein .3s ease"><i class="${to === "confirmed" ? "ri-checkbox-circle-line" : "ri-close-circle-line"}"></i> ${to === "confirmed" ? "已批准" : "已驳回"}，正在同步…</span>`;
+  }
+  try {
+    await api(`/api/resources/bookings/${no}/status?status=${to}&operator_id=${SESSION.user_id}`, { method: "PATCH" });
+    toast(to === "confirmed" ? "已批准" : "已驳回"); go("approvals");
+  } catch (e) { toast("操作失败：" + e.message, "error") }
+}
+
+/* ==================== 18. 随手拍（parent/teacher） ==================== */
+async function pgReport() {
+  const mine = (await api("/api/incidents?limit=50")).filter(i => i.reporter_id === SESSION.user_id);
+  const stColor = { reported: C_BLUE, dispatched: C_CYAN, processing: C_ORANGE, resolved: C_GREEN, closed: "var(--ink-3)" };
+  const el = h(`<div class="grid g2">
+    ${panel("ri-camera-line", "随手拍上报", "AI自动分类→派单，并作为citizen模态参与风险交叉印证",
+      `<div class="form-row"><label>问题描述</label>
+      <textarea id="rp-desc" class="native" rows="4" placeholder="例：东门下凹路段积水很深，孩子过不去 / 食堂饭菜有异物 / 六年级1班课桌摇晃…"></textarea></div>
+      <div class="form-row"><label>位置</label>
+      <select id="rp-loc" class="native"><option>东门</option><option>东门下凹路段</option><option>南门</option><option>京开辅路口</option><option>食堂后厨</option><option>翻新教室(六年级1班)</option><option>六年级教学楼</option><option>操场</option></select></div>
+      <div style="display:flex;align-items:center;gap:6px;margin:var(--sp-2) 0;color:var(--ink-3);font-size:var(--fs-xs)">
+        <i class="ri-image-add-line"></i> 可在此处拖拽添加现场照片（功能开发中）
+      </div>
+      ${btn("提交上报", "submitReport()", { icon: "ri-send-plane-fill", size: "m" })}
+      <div class="muted" id="rp-msg" style="margin-top:8px"></div>`)}
+    ${panel("ri-history-line", "我的上报", "",
+      mine.length ? `<div class="report-timeline">${mine.map(i => `<div class="list-item" style="border-left-color:${stColor[i.status] || C_BLUE};border-left-width:3px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <b>${i.ticket_no}</b> ${tag(CATL[i.category], "primary")}
+          ${tag(STL[i.status], i.status === "resolved" || i.status === "closed" ? "success" : "warning")}
+          <span class="muted" style="margin-left:auto"><i class="ri-time-line"></i> ${fmt(i.created_at)}</span>
+        </div>
+        <div class="muted" style="margin-top:3px">${esc(i.description.slice(0, 80))}${i.description.length > 80 ? "…" : ""} → ${esc(i.assignee || "")}</div></div>`).join("")}</div>` : empty("ri-camera-line", "暂无上报记录"))}
+  </div>`);
+  return el;
+}
+async function submitReport() {
+  const desc = document.getElementById("rp-desc").value.trim(), loc = document.getElementById("rp-loc").value;
+  const msg = document.getElementById("rp-msg");
+  if (desc.length < 2) { msg.textContent = "请填写描述"; return }
+  try {
+    const r = await api("/api/incidents", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reporter_id: SESSION.user_id, description: desc, location: loc })
+    });
+    msg.innerHTML = `<i class="ri-checkbox-circle-line" style="color:#2ba471"></i> 工单 <b>${r.ticket_no}</b>：AI识别[${CATL[r.category]}]（置信度${r.confidence}），已派 ${esc(r.assignee)}`;
+    document.getElementById("rp-desc").value = "";
+  } catch (e) { msg.textContent = "失败：" + e.message }
+}
+
+initLogin();
+</script>
+</body>
+</html>
