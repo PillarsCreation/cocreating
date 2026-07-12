@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database
+*.db
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Environment
+.env
+.env.local
+
+# Screenshots (generated, not committed)
+docs/screenshots/*.png
+docs/screenshots/*.pdf
+
+# Large vendor files (optional: comment out if you want to track them)
+# frontend/vendor/*.min.js
+# frontend/vendor/*.css
+# frontend/vendor/*.woff2
+
+# Temporary working files
+*.log

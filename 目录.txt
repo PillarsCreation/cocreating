@@ -1,0 +1,28 @@
+redgate/
+├── .gitignore              ← 新建
+├── requirements.txt        ← 新建
+├── README.md
+├── backend/
+│   ├── seed.py
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   ├── database.py
+│   │   ├── schemas.py
+│   │   ├── ai/ (10个引擎模块)
+│   │   ├── routers/ (15个路由模块)
+│   │   └── services/ (fusion.py)
+│   └── tests/ (test_core.py)
+├── frontend/
+│   ├── index.html
+│   ├── css/app.css (1025行，v5视觉增强版)
+│   ├── js/core.js (659行，v5动效版)
+│   ├── js/pages.js (920行，18页面版)
+│   └── vendor/ (6个库文件)
+├── docs/
+│   ├── 红门哨兵_分角色页面讲解.pdf
+│   └── screenshots/ (28张截图，v3版本)
+└── tools/
+    ├── capture_screens.py
+    └── build_pdf.py
